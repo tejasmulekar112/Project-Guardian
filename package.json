@@ -1,0 +1,22 @@
+{
+  "name": "project-guardian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered smart mobile safety system",
+  "workspaces": [
+    "mobile",
+    "shared-schemas"
+  ],
+  "scripts": {
+    "mobile:start": "npm run start --workspace=mobile",
+    "mobile:lint": "npm run lint --workspace=mobile",
+    "mobile:typecheck": "npm run typecheck --workspace=mobile",
+    "schemas:build": "npm run build --workspace=shared-schemas",
+    "storybook": "npm run storybook --workspace=mobile",
+    "check-stack": "bash scripts/check-stack.sh",
+    "simulate-sos": "bash scripts/simulate-sos.sh"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

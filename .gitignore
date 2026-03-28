@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.expo/
+__pycache__/
+*.pyc
+.venv/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.egg-info/
+build/
+*.tsbuildinfo
+
+# Firebase credentials
+firebase-service-account.json
+serviceAccountKey.json
+
+# Expo
+mobile/android/
+mobile/ios/
+
+# Python
+*.egg
+.eggs/
+*.whl

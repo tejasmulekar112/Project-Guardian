@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "guardian-ai-services"
+version = "0.1.0"
+description = "Project Guardian AI services - Whisper voice detection"
+authors = []
+readme = "README.md"
+packages = [{include = "whisper"}]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+openai = "^1.60.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+ruff = "^0.9.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"

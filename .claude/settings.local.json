@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"d:/Projects/SOS_app\" status)",
+      "Bash(docker --version)",
+      "Bash(npm --version)",
+      "Bash(find . -type f -name .*)",
+      "Bash(poetry --version)",
+      "Bash(npx expo:*)",
+      "Bash(poetry install:*)",
+      "Bash(where poetry:*)",
+      "Bash(pip --version)"
+    ]
+  }
+}
