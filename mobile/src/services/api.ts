@@ -1,11 +1,25 @@
 import type { SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
+import { auth } from './firebase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+  const token = await user.getIdToken();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+}
+
 export async function triggerSOS(payload: SOSTriggerRequest): Promise<SOSTriggerResponse> {
+  const headers = await getAuthHeaders();
   const response = await fetch(`${API_URL}/sos/trigger`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
 
