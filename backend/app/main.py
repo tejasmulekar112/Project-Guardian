@@ -1,9 +1,20 @@
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.firebase_init import init_firebase
 from app.routers import health, sos
 
-app = FastAPI(title="Project Guardian API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    init_firebase()
+    yield
+
+
+app = FastAPI(title="Project Guardian API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
