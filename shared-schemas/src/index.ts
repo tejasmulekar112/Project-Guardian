@@ -19,3 +19,10 @@ export type {
 export type {
   VoiceDetectionResult,
 } from './voice-detection';
+
+export type {
+  EvidenceType,
+  EvidenceUploadStatus,
+  EvidenceItem,
+  EvidenceManifest,
+} from './evidence';
