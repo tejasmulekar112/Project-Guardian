@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SOSStatus(str, Enum):
@@ -19,16 +19,16 @@ class TriggerType(str, Enum):
 class GeoLocation(BaseModel):
     latitude: float
     longitude: float
-    accuracy_meters: float | None = None
+    accuracyMeters: float | None = None
 
 
 class SOSTriggerRequest(BaseModel):
-    user_id: str
+    userId: str
     location: GeoLocation
-    trigger_type: TriggerType = TriggerType.MANUAL
+    triggerType: TriggerType = TriggerType.MANUAL
     message: str | None = None
 
 
 class SOSTriggerResponse(BaseModel):
-    event_id: str
+    eventId: str
     status: SOSStatus

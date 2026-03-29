@@ -1,7 +1,8 @@
-import type { EmergencyContact, SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
+import type { SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
 import { auth } from './firebase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+console.log('API_URL configured as:', API_URL);
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const user = auth.currentUser;
@@ -12,26 +13,37 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
+    'ngrok-skip-browser-warning': 'true',
   };
 }
 
 export async function triggerSOS(payload: SOSTriggerRequest): Promise<SOSTriggerResponse> {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/sos/trigger`, {
+  const url = `${API_URL}/sos/trigger`;
+  const body = JSON.stringify(payload);
+  console.log('SOS REQUEST URL:', url);
+  console.log('SOS REQUEST BODY:', body);
+  console.log('SOS REQUEST HEADERS:', JSON.stringify(headers));
+
+  const response = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify(payload),
+    body,
   });
 
   if (!response.ok) {
-    throw new Error(`SOS trigger failed: ${response.status}`);
+    const errorBody = await response.text();
+    console.log('SOS ERROR RESPONSE:', response.status, errorBody);
+    throw new Error(`SOS trigger failed: ${response.status} - ${errorBody}`);
   }
 
   return response.json() as Promise<SOSTriggerResponse>;
 }
 
 export async function healthCheck(): Promise<{ status: string }> {
-  const response = await fetch(`${API_URL}/health`);
+  const response = await fetch(`${API_URL}/health`, {
+    headers: { 'ngrok-skip-browser-warning': 'true' },
+  });
   return response.json() as Promise<{ status: string }>;
 }
 
@@ -44,20 +56,3 @@ export async function registerFcmToken(token: string): Promise<void> {
   });
 }
 
-export async function getContacts(): Promise<EmergencyContact[]> {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/users/me/contacts`, { headers });
-  if (!response.ok) throw new Error(`Failed to get contacts: ${response.status}`);
-  const data = await response.json() as { contacts: EmergencyContact[] };
-  return data.contacts;
-}
-
-export async function setContacts(contacts: EmergencyContact[]): Promise<void> {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${API_URL}/users/me/contacts`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({ contacts }),
-  });
-  if (!response.ok) throw new Error(`Failed to save contacts: ${response.status}`);
-}

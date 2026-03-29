@@ -18,11 +18,11 @@ class FirebaseService:
         db = FirebaseService._db()
         doc_ref = db.collection("sos_events").document(event_id)
         doc_ref.set({
-            "user_id": payload.user_id,
+            "user_id": payload.userId,
             "latitude": payload.location.latitude,
             "longitude": payload.location.longitude,
-            "accuracy_meters": payload.location.accuracy_meters,
-            "trigger_type": payload.trigger_type.value,
+            "accuracy_meters": payload.location.accuracyMeters,
+            "trigger_type": payload.triggerType.value,
             "message": payload.message,
             "status": "triggered",
             "created_at": time.time(),

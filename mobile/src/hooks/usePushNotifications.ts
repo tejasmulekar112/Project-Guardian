@@ -3,15 +3,20 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Only set handler if not in Expo Go (push notifications removed from Expo Go in SDK 53+)
+const isExpoGo = Constants.appOwnership === 'expo';
+
+if (!isExpoGo) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export function usePushNotifications(): {
   expoPushToken: string | null;
@@ -22,6 +27,11 @@ export function usePushNotifications(): {
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
+    // Skip push notification registration in Expo Go
+    if (isExpoGo) {
+      return;
+    }
+
     registerForPushNotifications().then(setExpoPushToken);
 
     notificationListener.current = Notifications.addNotificationReceivedListener(
@@ -29,9 +39,7 @@ export function usePushNotifications(): {
     );
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
+      notificationListener.current?.remove();
     };
   }, []);
 

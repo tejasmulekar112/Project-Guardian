@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export const StatusScreen: React.FC = () => (
+export const StatusScreen = () => (
   <View style={styles.container}>
     <Text style={styles.title}>Status</Text>
     <Text style={styles.placeholder}>SOS event tracking coming soon</Text>

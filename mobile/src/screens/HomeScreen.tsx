@@ -16,7 +16,7 @@ interface HomeScreenProps {
   }>;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const { user, signOut } = useAuth();
   const { location, refresh: refreshLocation } = useLocation();
   const [isTriggered, setIsTriggered] = useState(false);

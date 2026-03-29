@@ -6,7 +6,7 @@ interface SOSButtonProps {
   disabled?: boolean;
 }
 
-export const SOSButton: React.FC<SOSButtonProps> = ({ onPress, disabled = false }) => (
+export const SOSButton = ({ onPress, disabled = false }: SOSButtonProps) => (
   <TouchableOpacity
     style={[styles.button, disabled && styles.disabled]}
     onPress={onPress}

@@ -9,7 +9,7 @@ interface LoginScreenProps {
   navigation: NativeStackNavigationProp<{ Login: undefined; Register: undefined }>;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

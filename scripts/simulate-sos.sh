@@ -10,13 +10,13 @@ echo ""
 RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/sos/trigger" \
   -H "Content-Type: application/json" \
   -d '{
-    "user_id": "test-user-001",
+    "userId": "test-user-001",
     "location": {
       "latitude": 28.6139,
       "longitude": 77.2090,
-      "accuracy_meters": 10.0
+      "accuracyMeters": 10.0
     },
-    "trigger_type": "manual",
+    "triggerType": "manual",
     "message": "Test SOS event from simulate-sos.sh"
   }')
 

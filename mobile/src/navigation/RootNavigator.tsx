@@ -32,14 +32,14 @@ const headerOptions = {
   headerTitleStyle: { fontWeight: 'bold' as const },
 };
 
-const AuthNavigator: React.FC = () => (
+const AuthNavigator = () => (
   <AuthStack.Navigator screenOptions={headerOptions}>
     <AuthStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
     <AuthStack.Screen name="Register" component={RegisterScreen} options={{ title: 'Register' }} />
   </AuthStack.Navigator>
 );
 
-const AppNavigator: React.FC = () => (
+const AppNavigator = () => (
   <AppStack.Navigator screenOptions={headerOptions}>
     <AppStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
     <AppStack.Screen name="Status" component={StatusScreen} options={{ title: 'SOS Status' }} />
@@ -48,7 +48,7 @@ const AppNavigator: React.FC = () => (
   </AppStack.Navigator>
 );
 
-const NavigationContent: React.FC = () => {
+const NavigationContent = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -66,7 +66,7 @@ const NavigationContent: React.FC = () => {
   );
 };
 
-export const RootNavigator: React.FC = () => (
+export const RootNavigator = () => (
   <AuthProvider>
     <NavigationContent />
   </AuthProvider>

@@ -37,4 +37,4 @@ async def trigger_sos(
     # 5. Send FCM push to contacts with app installed
     await FirebaseService.notify_contacts(user_id, event_id, maps_url)
 
-    return SOSTriggerResponse(event_id=event_id, status=SOSStatus.DISPATCHED)
+    return SOSTriggerResponse(eventId=event_id, status=SOSStatus.DISPATCHED)

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.firebase_init import init_firebase
-from app.routers import health, sos, users
+from app.routers import health, sos
 
 
 @asynccontextmanager
@@ -25,4 +25,3 @@ app.add_middleware(
 
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(sos.router, prefix="/sos", tags=["sos"])
-app.include_router(users.router, prefix="/users", tags=["users"])

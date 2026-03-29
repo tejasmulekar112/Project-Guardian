@@ -10,9 +10,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import type { EmergencyContact } from '@guardian/shared-schemas';
-import { getContacts, setContacts } from '../services/api';
+import { getContacts, setContacts } from '../services/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
-export const ContactsScreen: React.FC = () => {
+export const ContactsScreen = () => {
+  const { user } = useAuth();
   const [contacts, setLocalContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
@@ -20,28 +22,29 @@ export const ContactsScreen: React.FC = () => {
   const [relationship, setRelationship] = useState('');
 
   const loadContacts = useCallback(async () => {
+    if (!user) return;
     try {
-      const data = await getContacts();
+      const data = await getContacts(user.uid);
       setLocalContacts(data);
     } catch {
       Alert.alert('Error', 'Failed to load contacts');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     void loadContacts();
   }, [loadContacts]);
 
   const handleAdd = async (): Promise<void> => {
-    if (!name || !phone || !relationship) {
+    if (!user || !name || !phone || !relationship) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
     const updated = [...contacts, { name, phone, relationship }];
     try {
-      await setContacts(updated);
+      await setContacts(user.uid, updated);
       setLocalContacts(updated);
       setName('');
       setPhone('');
@@ -52,9 +55,10 @@ export const ContactsScreen: React.FC = () => {
   };
 
   const handleDelete = async (index: number): Promise<void> => {
+    if (!user) return;
     const updated = contacts.filter((_, i) => i !== index);
     try {
-      await setContacts(updated);
+      await setContacts(user.uid, updated);
       setLocalContacts(updated);
     } catch {
       Alert.alert('Error', 'Failed to delete contact');

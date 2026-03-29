@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
-export const RegisterScreen: React.FC = () => {
+export const RegisterScreen = () => {
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

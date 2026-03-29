@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { GeoLocation } from '@guardian/shared-schemas';
@@ -14,7 +14,7 @@ type AppStackParamList = {
 
 type TrackingScreenProps = NativeStackScreenProps<AppStackParamList, 'Tracking'>;
 
-export const TrackingScreen: React.FC<TrackingScreenProps> = ({ route }) => {
+export const TrackingScreen = ({ route }: TrackingScreenProps) => {
   const { initialLocation, eventId } = route.params;
   const [currentLocation, setCurrentLocation] = useState<GeoLocation>(initialLocation);
   const mapRef = useRef<MapView | null>(null);
@@ -59,7 +59,6 @@ export const TrackingScreen: React.FC<TrackingScreenProps> = ({ route }) => {
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
         initialRegion={{
           latitude: initialLocation.latitude,
           longitude: initialLocation.longitude,
