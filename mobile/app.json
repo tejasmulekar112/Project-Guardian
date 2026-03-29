@@ -21,7 +21,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#DC2626"
       },
-      "package": "com.guardian.sos"
+      "package": "com.guardian.sos",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c0d4a888-9154-422b-a42d-9b482dd8c5f3"
+      }
     },
     "plugins": [
       [
@@ -37,6 +46,7 @@
           "color": "#DC2626"
         }
       ]
-    ]
+    ],
+    "owner": "tejasmulekar112"
   }
 }
