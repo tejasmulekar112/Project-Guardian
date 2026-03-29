@@ -47,13 +47,6 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
 
       setIsTriggered(true);
       Alert.alert('SOS Sent', `Emergency contacts are being notified.\nEvent: ${result.eventId}`);
-
-      if (currentLocation) {
-        navigation.navigate('Tracking', {
-          initialLocation: currentLocation,
-          eventId: result.eventId,
-        });
-      }
     } catch (err) {
       Alert.alert('SOS Failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
