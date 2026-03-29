@@ -1,4 +1,4 @@
-import type { SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
+import type { EmergencyContact, SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
 import { auth } from './firebase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -42,4 +42,22 @@ export async function registerFcmToken(token: string): Promise<void> {
     headers,
     body: JSON.stringify({ token }),
   });
+}
+
+export async function getContacts(): Promise<EmergencyContact[]> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${API_URL}/users/me/contacts`, { headers });
+  if (!response.ok) throw new Error(`Failed to get contacts: ${response.status}`);
+  const data = await response.json() as { contacts: EmergencyContact[] };
+  return data.contacts;
+}
+
+export async function setContacts(contacts: EmergencyContact[]): Promise<void> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${API_URL}/users/me/contacts`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ contacts }),
+  });
+  if (!response.ok) throw new Error(`Failed to save contacts: ${response.status}`);
 }
