@@ -8,6 +8,8 @@ import { StatusScreen } from '../screens/StatusScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
 import { ContactsScreen } from '../screens/ContactsScreen';
+import { TrackingScreen } from '../screens/TrackingScreen';
+import type { GeoLocation } from '@guardian/shared-schemas';
 
 type AuthStackParamList = {
   Login: undefined;
@@ -18,6 +20,7 @@ type AppStackParamList = {
   Home: undefined;
   Status: undefined;
   Contacts: undefined;
+  Tracking: { initialLocation: GeoLocation; eventId: string };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -41,6 +44,7 @@ const AppNavigator: React.FC = () => (
     <AppStack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
     <AppStack.Screen name="Status" component={StatusScreen} options={{ title: 'SOS Status' }} />
     <AppStack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Emergency Contacts' }} />
+    <AppStack.Screen name="Tracking" component={TrackingScreen} options={{ title: 'Live Tracking' }} />
   </AppStack.Navigator>
 );
 

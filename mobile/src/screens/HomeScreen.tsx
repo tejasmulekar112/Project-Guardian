@@ -5,12 +5,14 @@ import { SOSButton } from '../components/SOSButton';
 import { useLocation } from '../hooks/useLocation';
 import { useAuth } from '../contexts/AuthContext';
 import { triggerSOS } from '../services/api';
+import type { GeoLocation } from '@guardian/shared-schemas';
 
 interface HomeScreenProps {
   navigation: NativeStackNavigationProp<{
     Home: undefined;
     Status: undefined;
     Contacts: undefined;
+    Tracking: { initialLocation: GeoLocation; eventId: string };
   }>;
 }
 
@@ -45,6 +47,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
       setIsTriggered(true);
       Alert.alert('SOS Sent', `Emergency contacts are being notified.\nEvent: ${result.eventId}`);
+
+      if (currentLocation) {
+        navigation.navigate('Tracking', {
+          initialLocation: currentLocation,
+          eventId: result.eventId,
+        });
+      }
     } catch (err) {
       Alert.alert('SOS Failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
