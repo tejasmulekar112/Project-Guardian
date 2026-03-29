@@ -4,6 +4,9 @@ from fastapi.testclient import TestClient
 
 
 MOCK_USER = {"uid": "test-user-001", "email": "test@example.com"}
+MOCK_CONTACTS = [
+    {"name": "Mom", "phone": "+1111111111", "relationship": "Mother"},
+]
 
 
 def test_trigger_sos(client: TestClient) -> None:
@@ -15,9 +18,24 @@ def test_trigger_sos(client: TestClient) -> None:
             return_value="mock-event-id",
         ),
         patch(
+            "app.services.firebase_service.FirebaseService.get_user_contacts",
+            new_callable=AsyncMock,
+            return_value=MOCK_CONTACTS,
+        ),
+        patch(
             "app.services.location_service.LocationService.get_maps_url",
             new_callable=AsyncMock,
             return_value="https://www.google.com/maps?q=28.6139,77.209",
+        ),
+        patch(
+            "app.services.twilio_service.TwilioService.send_emergency_sms",
+            new_callable=AsyncMock,
+            return_value=1,
+        ),
+        patch(
+            "app.services.firebase_service.FirebaseService.notify_contacts",
+            new_callable=AsyncMock,
+            return_value=1,
         ),
     ):
         response = client.post(
@@ -49,9 +67,24 @@ def test_trigger_sos_minimal(client: TestClient) -> None:
             return_value="mock-event-id",
         ),
         patch(
+            "app.services.firebase_service.FirebaseService.get_user_contacts",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
             "app.services.location_service.LocationService.get_maps_url",
             new_callable=AsyncMock,
             return_value="https://www.google.com/maps?q=0.0,0.0",
+        ),
+        patch(
+            "app.services.twilio_service.TwilioService.send_emergency_sms",
+            new_callable=AsyncMock,
+            return_value=0,
+        ),
+        patch(
+            "app.services.firebase_service.FirebaseService.notify_contacts",
+            new_callable=AsyncMock,
+            return_value=0,
         ),
     ):
         response = client.post(
