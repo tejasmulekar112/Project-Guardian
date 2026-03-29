@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 // @ts-expect-error getReactNativePersistence is exported via react-native condition in @firebase/auth
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
@@ -17,3 +18,5 @@ export const firebaseApp = initializeApp(firebaseConfig);
 export const auth = initializeAuth(firebaseApp, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
+
+export const storage = getStorage(firebaseApp);
