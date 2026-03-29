@@ -7,6 +7,8 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
+import { usePushNotifications } from '../hooks/usePushNotifications';
+import { registerFcmToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +31,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     return unsubscribe;
   }, []);
+
+  const { expoPushToken } = usePushNotifications();
+
+  useEffect(() => {
+    if (user && expoPushToken) {
+      registerFcmToken(expoPushToken).catch(() => {
+        // Silent fail — will retry on next app launch
+      });
+    }
+  }, [user, expoPushToken]);
 
   const signIn = async (email: string, password: string): Promise<void> => {
     await signInWithEmailAndPassword(auth, email, password);

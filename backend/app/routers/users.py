@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 from app.middleware.auth import verify_firebase_token
 from app.models.user import (
@@ -62,3 +63,21 @@ async def set_contacts(
         [c.model_dump() for c in body.contacts],
     )
     return {"status": "updated"}
+
+
+class FcmTokenRequest(BaseModel):
+    token: str
+
+
+@router.put("/me/fcm-token")
+async def register_fcm_token(
+    body: FcmTokenRequest,
+    user: dict = Depends(verify_firebase_token),
+) -> dict[str, str]:
+    """Register or update FCM push token for the current user."""
+    db = FirebaseService._db()
+    db.collection("users").document(user["uid"]).set(
+        {"fcm_token": body.token},
+        merge=True,
+    )
+    return {"status": "registered"}

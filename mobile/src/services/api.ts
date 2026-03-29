@@ -34,3 +34,12 @@ export async function healthCheck(): Promise<{ status: string }> {
   const response = await fetch(`${API_URL}/health`);
   return response.json() as Promise<{ status: string }>;
 }
+
+export async function registerFcmToken(token: string): Promise<void> {
+  const headers = await getAuthHeaders();
+  await fetch(`${API_URL}/users/me/fcm-token`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ token }),
+  });
+}
