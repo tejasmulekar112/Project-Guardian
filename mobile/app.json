@@ -24,7 +24,9 @@
       "package": "com.guardian.sos",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "extra": {
@@ -44,6 +46,14 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#DC2626"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Project Guardian needs camera access to capture evidence during emergencies.",
+          "microphonePermission": "Project Guardian needs microphone access to record audio evidence.",
+          "recordAudioAndroid": true
         }
       ]
     ],
