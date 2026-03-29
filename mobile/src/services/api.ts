@@ -1,4 +1,4 @@
-import type { SOSTriggerRequest, SOSTriggerResponse } from '@guardian/shared-schemas';
+import type { SOSTriggerRequest, SOSTriggerResponse, VoiceDetectionResult } from '@guardian/shared-schemas';
 import { auth } from './firebase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
@@ -45,6 +45,33 @@ export async function healthCheck(): Promise<{ status: string }> {
     headers: { 'ngrok-skip-browser-warning': 'true' },
   });
   return response.json() as Promise<{ status: string }>;
+}
+
+export async function detectVoice(audioUri: string): Promise<VoiceDetectionResult> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
+  const token = await user.getIdToken();
+
+  const formData = new FormData();
+  formData.append('file', {
+    uri: audioUri,
+    type: 'audio/m4a',
+    name: 'audio.m4a',
+  } as unknown as Blob);
+
+  const response = await fetch(`${API_URL}/sos/voice-detect`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voice detection failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<VoiceDetectionResult>;
 }
 
 export async function registerFcmToken(token: string): Promise<void> {

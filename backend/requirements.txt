@@ -4,3 +4,5 @@ firebase-admin==6.9.0
 twilio==9.10.4
 pydantic-settings==2.13.1
 httpx==0.28.1
+openai==1.82.1
+python-multipart==0.0.20

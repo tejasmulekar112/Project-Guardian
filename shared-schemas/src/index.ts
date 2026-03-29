@@ -15,3 +15,7 @@ export type {
 export type {
   LocationUpdate,
 } from './location';
+
+export type {
+  VoiceDetectionResult,
+} from './voice-detection';

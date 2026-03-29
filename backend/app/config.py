@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_from_phone: str = ""
 
+    # OpenAI
+    openai_api_key: str = ""
+
     # Google Maps
     google_maps_api_key: str = ""
 
