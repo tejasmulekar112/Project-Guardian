@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Audio } from 'expo-av';
 import { CameraView } from 'expo-camera';
-import * as FileSystem from 'expo-file-system';
 import { addEvidenceItem } from '../services/evidenceStorage';
 import { uploadEventEvidence } from '../services/evidenceUpload';
 

@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import type { EvidenceItem, EvidenceManifest, EvidenceType, EvidenceUploadStatus } from '@guardian/shared-schemas';
 
 const EVIDENCE_DIR = `${FileSystem.documentDirectory}evidence/`;

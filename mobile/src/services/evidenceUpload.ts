@@ -1,7 +1,7 @@
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getFirestore } from 'firebase/firestore';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { storage, firebaseApp } from './firebase';
 import { updateItemStatus, getAllPendingManifests, readManifest } from './evidenceStorage';
 import type { EvidenceItem } from '@guardian/shared-schemas';
