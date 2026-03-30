@@ -18,7 +18,7 @@ type AuthStackParamList = {
 
 type AppStackParamList = {
   Home: undefined;
-  Status: undefined;
+  Status: { eventId: string } | undefined;
   Contacts: undefined;
   Tracking: { initialLocation: GeoLocation; eventId: string };
 };
