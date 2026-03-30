@@ -1,19 +1,21 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, Text, Alert, TouchableOpacity } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SOSButton } from '../components/SOSButton';
 import { CountdownOverlay } from '../components/CountdownOverlay';
 import { VoiceIndicator } from '../components/VoiceIndicator';
 import { useLocation } from '../hooks/useLocation';
 import { useAuth } from '../contexts/AuthContext';
 import { useVoiceDetection } from '../hooks/useVoiceDetection';
+import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
 import { triggerSOS } from '../services/api';
 import type { GeoLocation, TriggerType } from '@guardian/shared-schemas';
 
 interface HomeScreenProps {
   navigation: NativeStackNavigationProp<{
     Home: undefined;
-    Status: undefined;
+    Status: { eventId: string } | undefined;
     Contacts: undefined;
     Tracking: { initialLocation: GeoLocation; eventId: string };
   }>;
@@ -34,6 +36,9 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     stopListening,
     clearDetection,
   } = useVoiceDetection();
+
+  const { state: recorderState, cameraRef, startRecording } = useEvidenceRecorder();
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const handleSOS = useCallback(async (triggerType: TriggerType = 'manual', message?: string): Promise<void> => {
     if (!user) {
@@ -59,7 +64,19 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
       });
 
       setIsTriggered(true);
-      Alert.alert('SOS Sent', `Emergency contacts are being notified.\nEvent: ${result.eventId}`);
+
+      // Start evidence recording
+      if (!cameraPermission?.granted) {
+        await requestCameraPermission();
+      }
+      void startRecording(result.eventId, user.uid);
+
+      Alert.alert('SOS Sent', `Emergency contacts are being notified.`, [
+        {
+          text: 'View Status',
+          onPress: () => navigation.navigate('Status', { eventId: result.eventId }),
+        },
+      ]);
     } catch (err) {
       Alert.alert('SOS Failed', err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -139,6 +156,16 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
         {isListening && <VoiceIndicator />}
         {voiceError && <Text style={styles.errorText}>{voiceError}</Text>}
       </View>
+
+      {/* Hidden camera for evidence recording */}
+      {isTriggered && recorderState.isRecording && (
+        <CameraView
+          ref={cameraRef}
+          style={styles.hiddenCamera}
+          facing="back"
+          mode="video"
+        />
+      )}
     </View>
   );
 };
@@ -216,5 +243,11 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 14,
     marginTop: 8,
+  },
+  hiddenCamera: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
   },
 });
