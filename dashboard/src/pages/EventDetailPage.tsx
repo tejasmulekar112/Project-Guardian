@@ -32,7 +32,21 @@ export function EventDetailPage() {
     if (!eventId) return;
     const unsubscribe = onSnapshot(doc(db, 'sos_events', eventId), (snapshot) => {
       if (snapshot.exists()) {
-        setEvent({ id: snapshot.id, ...snapshot.data() } as EventDetail);
+        const d = snapshot.data();
+        setEvent({
+          id: snapshot.id,
+          userId: d.user_id,
+          location: {
+            latitude: d.latitude,
+            longitude: d.longitude,
+            accuracyMeters: d.accuracy_meters,
+          },
+          triggerType: d.trigger_type,
+          status: d.status,
+          message: d.message,
+          createdAt: d.created_at,
+          evidence: d.evidence,
+        } as EventDetail);
       }
       setLoading(false);
     });
