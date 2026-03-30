@@ -12,9 +12,11 @@ import {
 import type { EmergencyContact } from '@guardian/shared-schemas';
 import { getContacts, setContacts } from '../services/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 
 export const ContactsScreen = () => {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const [contacts, setLocalContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
@@ -67,23 +69,23 @@ export const ContactsScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#DC2626" />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.danger} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={contacts}
         keyExtractor={(_, i) => i.toString()}
-        ListEmptyComponent={<Text style={styles.empty}>No emergency contacts yet</Text>}
+        ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>No emergency contacts yet</Text>}
         renderItem={({ item, index }) => (
-          <View style={styles.contactRow}>
+          <View style={[styles.contactRow, { backgroundColor: colors.surface }]}>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactName}>{item.name}</Text>
-              <Text style={styles.contactDetail}>{item.phone} · {item.relationship}</Text>
+              <Text style={[styles.contactName, { color: colors.text }]}>{item.name}</Text>
+              <Text style={[styles.contactDetail, { color: colors.textSecondary }]}>{item.phone} · {item.relationship}</Text>
             </View>
             <TouchableOpacity onPress={() => handleDelete(index)}>
               <Text style={styles.deleteBtn}>Remove</Text>
@@ -92,31 +94,31 @@ export const ContactsScreen = () => {
         )}
       />
 
-      <View style={styles.form}>
-        <Text style={styles.formTitle}>Add Contact</Text>
+      <View style={[styles.form, { borderTopColor: colors.border }]}>
+        <Text style={[styles.formTitle, { color: colors.text }]}>Add Contact</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText }]}
           placeholder="Name"
-          placeholderTextColor="#6B7280"
+          placeholderTextColor={colors.placeholder}
           value={name}
           onChangeText={setName}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText }]}
           placeholder="Phone (+1234567890)"
-          placeholderTextColor="#6B7280"
+          placeholderTextColor={colors.placeholder}
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.inputBg, color: colors.inputText }]}
           placeholder="Relationship"
-          placeholderTextColor="#6B7280"
+          placeholderTextColor={colors.placeholder}
           value={relationship}
           onChangeText={setRelationship}
         />
-        <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
+        <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.successBg }]} onPress={handleAdd}>
           <Text style={styles.addBtnText}>Add Contact</Text>
         </TouchableOpacity>
       </View>
@@ -127,11 +129,9 @@ export const ContactsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
     padding: 16,
   },
   empty: {
-    color: '#9CA3AF',
     fontSize: 16,
     textAlign: 'center',
     marginTop: 32,
@@ -140,7 +140,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
     borderRadius: 8,
     padding: 16,
     marginBottom: 8,
@@ -149,12 +148,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   contactDetail: {
-    color: '#9CA3AF',
     fontSize: 14,
     marginTop: 4,
   },
@@ -165,26 +162,21 @@ const styles = StyleSheet.create({
   },
   form: {
     borderTopWidth: 1,
-    borderTopColor: '#374151',
     paddingTop: 16,
     marginTop: 16,
   },
   formTitle: {
-    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#1F2937',
-    color: '#FFFFFF',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
     fontSize: 16,
   },
   addBtn: {
-    backgroundColor: '#059669',
     borderRadius: 8,
     padding: 14,
     alignItems: 'center',

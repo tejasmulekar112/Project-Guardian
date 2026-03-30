@@ -10,6 +10,7 @@ import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
 import { addEvidenceItem } from '../services/evidenceStorage';
 import { uploadEventEvidence } from '../services/evidenceUpload';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../theme/ThemeContext';
 
 type StatusScreenProps = NativeStackScreenProps<{
   Home: undefined;
@@ -21,6 +22,7 @@ type StatusScreenProps = NativeStackScreenProps<{
 export const StatusScreen = ({ route }: StatusScreenProps) => {
   const eventId = route.params?.eventId ?? null;
   const { user } = useAuth();
+  const { colors } = useTheme();
   const { state: recorderState } = useEvidenceRecorder();
   const { items, uploadedCount, totalCount, retryAll } = useEvidenceUpload(eventId);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -75,11 +77,11 @@ export const StatusScreen = ({ route }: StatusScreenProps) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <Text style={styles.title}>SOS Triggered</Text>
-      <Text style={styles.subtitle}>Help is on the way</Text>
+      <Text style={[styles.subtitle, { color: colors.success }]}>Help is on the way</Text>
 
-      {eventId && <Text style={styles.eventId}>Event: {eventId}</Text>}
+      {eventId && <Text style={[styles.eventId, { color: colors.textTertiary }]}>Event: {eventId}</Text>}
 
       {/* Recording indicator */}
       {recorderState.isRecording && (
@@ -91,8 +93,8 @@ export const StatusScreen = ({ route }: StatusScreenProps) => {
 
       {/* Take Photo button — shown after recording completes */}
       {eventId && recorderState.recordingComplete && (
-        <TouchableOpacity style={styles.photoBtn} onPress={handleOpenCamera}>
-          <Text style={styles.photoBtnText}>Take Photo</Text>
+        <TouchableOpacity style={[styles.photoBtn, { backgroundColor: colors.surface, borderColor: colors.info }]} onPress={handleOpenCamera}>
+          <Text style={[styles.photoBtnText, { color: colors.info }]}>Take Photo</Text>
         </TouchableOpacity>
       )}
 
@@ -112,7 +114,6 @@ export const StatusScreen = ({ route }: StatusScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
   },
   content: {
     padding: 20,
@@ -124,29 +125,24 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {
-    color: '#34D399',
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
   eventId: {
-    color: '#6B7280',
     fontSize: 12,
     marginBottom: 24,
     fontFamily: 'monospace',
   },
   photoBtn: {
-    backgroundColor: '#1F2937',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderWidth: 2,
-    borderColor: '#60A5FA',
     alignItems: 'center',
     marginBottom: 16,
   },
   photoBtnText: {
-    color: '#60A5FA',
     fontSize: 16,
     fontWeight: '600',
   },

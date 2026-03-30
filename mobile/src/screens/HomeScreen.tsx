@@ -9,6 +9,7 @@ import { useLocation } from '../hooks/useLocation';
 import { useAuth } from '../contexts/AuthContext';
 import { useVoiceDetection } from '../hooks/useVoiceDetection';
 import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
+import { useTheme } from '../theme/ThemeContext';
 import { triggerSOS } from '../services/api';
 import type { GeoLocation, TriggerType } from '@guardian/shared-schemas';
 
@@ -23,6 +24,7 @@ interface HomeScreenProps {
 
 export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const { user, signOut } = useAuth();
+  const { colors, toggleTheme, isDark } = useTheme();
   const { location, refresh: refreshLocation } = useLocation();
   const [isTriggered, setIsTriggered] = useState(false);
   const [sending, setSending] = useState(false);
@@ -114,7 +116,7 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   }, [isListening, startListening, stopListening]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {showCountdown && detection?.keyword && (
         <CountdownOverlay
           keyword={detection.keyword}
@@ -124,31 +126,38 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
       )}
 
       <View style={styles.header}>
-        <Text style={styles.email}>{user?.email}</Text>
+        <Text style={[styles.email, { color: colors.textSecondary }]}>{user?.email}</Text>
         <View style={styles.headerButtons}>
-          <Text style={styles.headerLink} onPress={() => navigation.navigate('Contacts')}>
+          <Text style={[styles.headerLink, { color: colors.info }]} onPress={toggleTheme}>
+            {isDark ? 'Light' : 'Dark'}
+          </Text>
+          <Text style={[styles.headerLink, { color: colors.info }]} onPress={() => navigation.navigate('Contacts')}>
             Contacts
           </Text>
-          <Text style={styles.headerLink} onPress={signOut}>
+          <Text style={[styles.headerLink, { color: colors.info }]} onPress={signOut}>
             Sign Out
           </Text>
         </View>
       </View>
 
       <View style={styles.center}>
-        <Text style={styles.title}>Project Guardian</Text>
-        <Text style={styles.subtitle}>Press the button in an emergency</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Guardian</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Press the button in an emergency</Text>
         <SOSButton onPress={() => handleSOS('manual')} disabled={isTriggered || sending} />
-        {isTriggered && <Text style={styles.status}>Help is on the way</Text>}
-        {sending && <Text style={styles.sending}>Sending SOS...</Text>}
+        {isTriggered && <Text style={[styles.status, { color: colors.success }]}>Help is on the way</Text>}
+        {sending && <Text style={[styles.sending, { color: colors.warning }]}>Sending SOS...</Text>}
 
         {/* Voice Detection Toggle */}
         <TouchableOpacity
-          style={[styles.voiceBtn, isListening && styles.voiceBtnActive]}
+          style={[
+            styles.voiceBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            isListening && { borderColor: '#EF4444', backgroundColor: isDark ? '#291111' : '#FEE2E2' },
+          ]}
           onPress={toggleListening}
           disabled={isTriggered || sending}
         >
-          <Text style={styles.voiceBtnText}>
+          <Text style={[styles.voiceBtnText, { color: colors.text }]}>
             {isListening ? 'Stop Listening' : 'Start Voice Detection'}
           </Text>
         </TouchableOpacity>
@@ -173,7 +182,6 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
   },
   header: {
     flexDirection: 'row',
@@ -183,7 +191,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   email: {
-    color: '#9CA3AF',
     fontSize: 14,
   },
   headerButtons: {
@@ -191,7 +198,6 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   headerLink: {
-    color: '#60A5FA',
     fontSize: 14,
   },
   center: {
@@ -200,42 +206,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: '#FFFFFF',
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   subtitle: {
-    color: '#9CA3AF',
     fontSize: 16,
     marginBottom: 48,
   },
   status: {
-    color: '#34D399',
     fontSize: 18,
     fontWeight: '600',
     marginTop: 32,
   },
   sending: {
-    color: '#FBBF24',
     fontSize: 16,
     marginTop: 16,
   },
   voiceBtn: {
     marginTop: 24,
-    backgroundColor: '#1F2937',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderWidth: 2,
-    borderColor: '#374151',
-  },
-  voiceBtnActive: {
-    borderColor: '#EF4444',
-    backgroundColor: '#291111',
   },
   voiceBtnText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
