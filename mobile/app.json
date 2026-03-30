@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Project Guardian",
+    "name": "Guardian",
     "slug": "project-guardian",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -38,7 +38,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Project Guardian needs your location to send emergency alerts."
+          "locationAlwaysAndWhenInUsePermission": "Guardian needs your location to send emergency alerts."
         }
       ],
       [
@@ -51,9 +51,16 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Project Guardian needs camera access to capture evidence during emergencies.",
-          "microphonePermission": "Project Guardian needs microphone access to record audio evidence.",
+          "cameraPermission": "Guardian needs camera access to capture evidence during emergencies.",
+          "microphonePermission": "Guardian needs microphone access to record audio evidence.",
           "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Guardian needs microphone access for voice detection.",
+          "speechRecognitionPermission": "Guardian needs speech recognition to detect distress calls."
         }
       ]
     ],
