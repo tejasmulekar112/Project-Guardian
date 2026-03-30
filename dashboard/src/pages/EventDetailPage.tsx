@@ -1,0 +1,113 @@
+import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { NavLayout } from '../components/NavLayout';
+import { StatusBadge } from '../components/StatusBadge';
+import { EvidencePlayer } from '../components/EvidencePlayer';
+import type { SOSStatus, TriggerType, GeoLocation } from '@guardian/shared-schemas';
+
+interface EventDetail {
+  id: string;
+  userId: string;
+  location: GeoLocation;
+  triggerType: TriggerType;
+  status: SOSStatus;
+  message?: string;
+  createdAt: number;
+  evidence?: Array<{
+    type: string;
+    url: string;
+    filename: string;
+    createdAt: number;
+  }>;
+}
+
+export function EventDetailPage() {
+  const { eventId } = useParams<{ eventId: string }>();
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!eventId) return;
+    const unsubscribe = onSnapshot(doc(db, 'sos_events', eventId), (snapshot) => {
+      if (snapshot.exists()) {
+        setEvent({ id: snapshot.id, ...snapshot.data() } as EventDetail);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <NavLayout>
+        <p className="text-gray-400">Loading event...</p>
+      </NavLayout>
+    );
+  }
+
+  if (!event) {
+    return (
+      <NavLayout>
+        <p className="text-gray-400">Event not found.</p>
+        <Link to="/" className="text-blue-400 hover:underline text-sm">
+          Back to dashboard
+        </Link>
+      </NavLayout>
+    );
+  }
+
+  return (
+    <NavLayout>
+      <div className="space-y-6">
+        <Link to="/" className="text-blue-400 hover:underline text-sm">
+          &larr; Back to dashboard
+        </Link>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h1 className="text-xl font-bold text-white mb-4">Event Details</h1>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <dt className="text-sm text-gray-400">Event ID</dt>
+              <dd className="text-white font-mono text-sm">{event.id}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-400">Timestamp</dt>
+              <dd className="text-white">{new Date(event.createdAt).toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-400">User ID</dt>
+              <dd className="text-white font-mono text-sm">{event.userId}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-400">Trigger Type</dt>
+              <dd className="text-white">{event.triggerType}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-400">Status</dt>
+              <dd><StatusBadge status={event.status} /></dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-400">Location</dt>
+              <dd className="text-white">
+                {event.location.latitude.toFixed(6)}, {event.location.longitude.toFixed(6)}
+              </dd>
+            </div>
+            {event.message && (
+              <div className="sm:col-span-2">
+                <dt className="text-sm text-gray-400">Message</dt>
+                <dd className="text-white">{event.message}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Evidence</h2>
+          <EvidencePlayer evidence={event.evidence ?? []} />
+        </div>
+      </div>
+    </NavLayout>
+  );
+}

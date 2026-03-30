@@ -5,7 +5,8 @@
   "description": "AI-powered smart mobile safety system",
   "workspaces": [
     "mobile",
-    "shared-schemas"
+    "shared-schemas",
+    "dashboard"
   ],
   "scripts": {
     "mobile:start": "npm run start --workspace=mobile",
