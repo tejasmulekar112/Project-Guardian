@@ -1,4 +1,4 @@
-# Project Guardian - Comprehensive Project Documentation
+# Project Guardian — Comprehensive Project Documentation
 
 ## AI-Powered Smart Mobile Safety System
 
@@ -8,7 +8,8 @@
 
 <p align="center">
   <strong>Guardian</strong> — An AI-powered mobile safety application that enables one-tap SOS alerts,<br/>
-  voice-activated emergency triggering, automatic evidence recording, and real-time location tracking.
+  voice-activated emergency triggering, shake-based distress detection,<br/>
+  automatic evidence recording, and real-time location tracking.
 </p>
 
 ---
@@ -23,12 +24,17 @@
 6. [Phase 1: Core SOS & Location Tracking](#chapter-6-phase-1-core-sos--location-tracking)
 7. [Phase 2: AI Voice Detection](#chapter-7-phase-2-ai-voice-detection)
 8. [Phase 3: Evidence Collection & Cloud Upload](#chapter-8-phase-3-evidence-collection--cloud-upload)
-9. [Phase 4: Admin Dashboard & Advanced Features](#chapter-9-phase-4-admin-dashboard)
-10. [Integration Processes](#chapter-10-integration-processes)
-11. [Deployment & DevOps](#chapter-11-deployment--devops)
-12. [Security Implementation](#chapter-12-security-implementation)
-13. [Testing & Verification](#chapter-13-testing--verification)
-14. [Future Scope](#chapter-14-future-scope)
+9. [Phase 4A: Admin Dashboard](#chapter-9-phase-4a-admin-dashboard)
+10. [Phase 4B: Advanced Dashboard Features](#chapter-10-phase-4b-advanced-dashboard-features)
+11. [Phase 5A: Shake Detection](#chapter-11-phase-5a-shake-detection)
+12. [Integration Processes](#chapter-12-integration-processes)
+13. [Deployment & DevOps](#chapter-13-deployment--devops)
+14. [Security Implementation](#chapter-14-security-implementation)
+15. [Testing & Verification](#chapter-15-testing--verification)
+16. [Future Scope](#chapter-16-future-scope)
+17. [Appendix A: Environment Setup Guide](#appendix-a-environment-setup-guide)
+18. [Appendix B: API Reference](#appendix-b-api-reference)
+19. [Appendix C: Application Screenshots Gallery](#appendix-c-application-screenshots-gallery)
 
 ---
 
@@ -50,10 +56,11 @@ There is a need for a **smart, AI-powered mobile safety application** that:
 
 1. Allows users to trigger emergency alerts with a **single button press**
 2. Supports **voice-activated SOS** — detecting distress keywords like "help", "emergency", "save me" without requiring the user to interact with the phone
-3. **Automatically records evidence** (audio, video, photos) when an SOS is triggered
-4. **Notifies emergency contacts** instantly via SMS and push notifications with the user's live location
-5. Provides an **admin dashboard** for real-time monitoring of all SOS events
-6. Works **offline-first** — stores evidence locally and uploads when connectivity is available
+3. Supports **shake-based SOS** — detecting rapid phone shaking for hands-free triggering when the user cannot speak or look at the screen
+4. **Automatically records evidence** (audio, video, photos) when an SOS is triggered
+5. **Notifies emergency contacts** instantly via SMS and push notifications with the user's live location
+6. Provides an **admin dashboard** for real-time monitoring of all SOS events
+7. Works **offline-first** — stores evidence locally and uploads when connectivity is available
 
 ## 1.3 Target Users
 
@@ -81,12 +88,13 @@ There is a need for a **smart, AI-powered mobile safety application** that:
 |---|-----------|--------|
 | 1 | One-tap SOS emergency trigger with location sharing | Completed |
 | 2 | AI-powered voice detection for hands-free SOS | Completed |
-| 3 | Automatic evidence recording (audio + video + photos) | Completed |
-| 4 | Instant SMS and push notification alerts to contacts | Completed |
-| 5 | Real-time location tracking on map | Completed |
-| 6 | Cloud-based evidence storage with offline-first approach | Completed |
-| 7 | Admin web dashboard for real-time monitoring | Completed |
-| 8 | Light/Dark mode UI support | Completed |
+| 3 | Shake-based SOS triggering (3 shakes in 2 seconds) | Completed |
+| 4 | Automatic evidence recording (audio + video + photos) | Completed |
+| 5 | Instant SMS and push notification alerts to contacts | Completed |
+| 6 | Real-time location tracking on map | Completed |
+| 7 | Cloud-based evidence storage with offline-first approach | Completed |
+| 8 | Admin web dashboard with analytics and event management | Completed |
+| 9 | Light/Dark mode UI support | Completed |
 
 ## 2.3 Project Structure
 
@@ -109,38 +117,52 @@ Project Guardian (Monorepo)
 ## 3.1 High-Level Architecture Diagram
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        MOBILE APP (Expo)                         │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │
-│  │ SOS      │  │ Voice    │  │ Evidence │  │ Location       │  │
-│  │ Button   │  │ Detection│  │ Recorder │  │ Tracker        │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬────────┘  │
-│       │              │             │                 │           │
-└───────┼──────────────┼─────────────┼─────────────────┼───────────┘
-        │              │             │                 │
-        ▼              ▼             ▼                 ▼
-┌───────────────┐  ┌────────┐  ┌──────────┐  ┌──────────────────┐
-│ FastAPI       │  │ On-    │  │ Firebase │  │ Google Maps API  │
-│ Backend       │  │ Device │  │ Storage  │  │ (Location URLs)  │
-│ (Render)      │  │ Speech │  │          │  └──────────────────┘
-│               │  │ Engine │  └──────────┘
-│ ┌───────────┐ │  └────────┘
-│ │ Twilio    │ │
-│ │ SMS API   │ │        ┌──────────────────────────────┐
-│ └───────────┘ │        │      FIREBASE SERVICES       │
-│ ┌───────────┐ │        │  ┌──────┐ ┌────────┐        │
-│ │ Firebase  │ │◄──────►│  │ Auth │ │Firestore│        │
-│ │ Admin SDK │ │        │  └──────┘ └────────┘        │
+┌──────────────────────────────────────────────────────────────────────┐
+│                        MOBILE APP (Expo)                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐    │
+│  │ SOS      │  │ Voice    │  │ Shake    │  │ Evidence         │    │
+│  │ Button   │  │ Detection│  │ Detection│  │ Recorder         │    │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬──────────┘    │
+│       │              │             │                 │               │
+│  ┌────┴──────────────┴─────────────┴─────────────────┘               │
+│  │                  Countdown Overlay (10s)                          │
+│  └────┬──────────────────────────────────────────────────────────┐   │
+│       │                                                          │   │
+│  ┌────┴─────┐                                          ┌────────┴┐  │
+│  │ Location │                                          │ Firebase │  │
+│  │ Tracker  │                                          │ Storage  │  │
+│  └────┬─────┘                                          └────────┬┘  │
+└───────┼──────────────────────────────────────────────────────────┼───┘
+        │                                                          │
+        ▼                                                          ▼
+┌───────────────┐                                      ┌──────────────┐
+│ FastAPI       │                                      │ Firebase     │
+│ Backend       │                                      │ Storage      │
+│ (Render)      │                                      │ (Evidence)   │
+│               │                                      └──────────────┘
+│ ┌───────────┐ │
+│ │ Twilio    │ │        ┌──────────────────────────────┐
+│ │ SMS API   │ │        │      FIREBASE SERVICES       │
 │ └───────────┘ │        │  ┌──────┐ ┌────────┐        │
-│ ┌───────────┐ │        │  │ FCM  │ │Hosting │        │
-│ │ FCM Push  │ │        │  └──────┘ └────────┘        │
-│ └───────────┘ │        └──────────────────────────────┘
-└───────────────┘                    ▲
-                                     │
+│ ┌───────────┐ │◄──────►│  │ Auth │ │Firestore│        │
+│ │ Firebase  │ │        │  └──────┘ └────────┘        │
+│ │ Admin SDK │ │        │  ┌──────┐ ┌────────┐        │
+│ └───────────┘ │        │  │ FCM  │ │Hosting │        │
+│ ┌───────────┐ │        │  └──────┘ └────────┘        │
+│ │ FCM Push  │ │        └──────────────────────────────┘
+│ └───────────┘ │                    ▲
+└───────────────┘                    │
                           ┌──────────┴──────────┐
                           │  ADMIN DASHBOARD     │
                           │  (React + Vite)      │
                           │  Firebase Hosting    │
+                          │                      │
+                          │  ┌────────────────┐  │
+                          │  │ Analytics      │  │
+                          │  │ Map View       │  │
+                          │  │ CSV Export     │  │
+                          │  │ Status Mgmt   │  │
+                          │  └────────────────┘  │
                           └─────────────────────┘
 ```
 
@@ -148,30 +170,33 @@ Project Guardian (Monorepo)
 
 ```
 Step 1: TRIGGER
-   User presses SOS button (or voice/shake detected)
+   User presses SOS button / voice keyword detected / phone shaken 3x
         │
-Step 2: LOCATION CAPTURE
+Step 2: COUNTDOWN (voice & shake only)
+   10-second countdown overlay with CANCEL option
+        │
+Step 3: LOCATION CAPTURE
    GPS coordinates captured via expo-location (high accuracy)
         │
-Step 3: API CALL
+Step 4: API CALL
    POST /sos/trigger → FastAPI backend on Render
         │
-Step 4: EVENT CREATION
+Step 5: EVENT CREATION
    Backend stores event in Firestore (sos_events collection)
         │
-Step 5: NOTIFICATIONS
+Step 6: NOTIFICATIONS
    ├── Twilio SMS → Emergency contacts receive SMS with Google Maps link
    └── FCM Push  → Push notification sent to contacts' devices
         │
-Step 6: EVIDENCE RECORDING
+Step 7: EVIDENCE RECORDING
    ├── Audio recording starts (30 seconds, auto)
    ├── Video recording starts (15 seconds, auto)
    └── User can manually capture photos after recording
         │
-Step 7: EVIDENCE UPLOAD
+Step 8: EVIDENCE UPLOAD
    Files uploaded to Firebase Storage → Metadata written to Firestore
         │
-Step 8: LIVE TRACKING
+Step 9: LIVE TRACKING
    Real-time location updates on map (every 5 seconds)
 ```
 
@@ -188,8 +213,9 @@ Mobile App ──direct──► Firestore (users, contacts CRUD)
 Mobile App ──direct──► Firebase Storage (evidence upload)
 Mobile App ──direct──► Google Maps API (live tracking)
 
-Dashboard  ──direct──► Firestore (onSnapshot real-time reads)
+Dashboard  ──direct──► Firestore (onSnapshot real-time reads + status writes)
 Dashboard  ──direct──► Firebase Auth (admin login)
+Dashboard  ──direct──► Firebase Storage (evidence playback)
 ```
 
 ---
@@ -207,6 +233,7 @@ Dashboard  ──direct──► Firebase Auth (admin login)
 | expo-camera | ~17.0.10 | Video recording & photo capture |
 | expo-av | ~15.1.4 | Audio recording & playback |
 | expo-speech-recognition | latest | On-device voice detection |
+| expo-sensors | latest | Accelerometer for shake detection |
 | expo-file-system | ~19.0.21 | Local file storage |
 | expo-notifications | ~0.32.4 | Push notification handling |
 | react-native-maps | 1.20.1 | Interactive map display |
@@ -238,6 +265,8 @@ Dashboard  ──direct──► Firebase Auth (admin login)
 | react-router-dom | 7.5.0 | Client-side routing |
 | Firebase (JS SDK) | 11.6.0 | Auth, Firestore, Storage |
 | TypeScript | 5.8.3 | Static type checking |
+| Leaflet + react-leaflet | latest | Interactive map component |
+| Recharts | latest | Analytics charts (area, donut) |
 
 ## 4.4 Cloud Services & APIs
 
@@ -272,17 +301,23 @@ Dashboard  ──direct──► Firebase Auth (admin login)
 ## 5.1 Phase Overview
 
 ```
-Phase 1 (Weeks 1-3): Core SOS & Location Tracking
+Phase 1 (Weeks 1-3): Core SOS & Location Tracking          ✅ Completed
     └── SOS button, location, Twilio SMS, FCM push, contacts management
 
-Phase 2 (Weeks 4-6): AI Voice Detection
+Phase 2 (Weeks 4-6): AI Voice Detection                    ✅ Completed
     └── On-device speech recognition, keyword detection, countdown overlay
 
-Phase 3 (Weeks 7-9): Evidence Collection & Cloud Upload
+Phase 3 (Weeks 7-9): Evidence Collection & Cloud Upload     ✅ Completed
     └── Auto audio/video recording, Firebase Storage, offline-first upload
 
-Phase 4 (Weeks 10-12): Admin Dashboard
+Phase 4A (Weeks 10-11): Admin Dashboard                     ✅ Completed
     └── Web dashboard, real-time monitoring, evidence viewer, user management
+
+Phase 4B (Week 12): Advanced Dashboard Features             ✅ Completed
+    └── Status management, interactive maps, CSV export, analytics charts
+
+Phase 5A (Week 13): Shake Detection                         ✅ Completed
+    └── Accelerometer-based shake trigger, 3-shake detection, countdown
 ```
 
 ## 5.2 Detailed Task Breakdown
@@ -322,7 +357,7 @@ Phase 4 (Weeks 10-12): Admin Dashboard
 8. Add manual photo capture functionality
 9. Implement offline-first upload with retry
 
-### Phase 4 Tasks
+### Phase 4A Tasks
 1. Scaffold dashboard workspace (Vite + React + TailwindCSS)
 2. Configure Firebase for dashboard (VITE_ env vars)
 3. Build admin auth with whitelist verification
@@ -333,8 +368,22 @@ Phase 4 (Weeks 10-12): Admin Dashboard
 8. Create activity feed with live updates
 9. Build event detail page with evidence player
 10. Build users page with contact expansion
-11. Configure Firebase Hosting
-12. Deploy dashboard
+11. Configure Firebase Hosting and deploy
+
+### Phase 4B Tasks
+1. Add event status management (Acknowledge/Resolve actions)
+2. Integrate Leaflet map on event detail page
+3. Build CSV export with proper escaping and BOM
+4. Add area chart (events over time, last 30 days)
+5. Add donut chart (trigger type distribution)
+6. Deploy updated dashboard to Firebase Hosting
+
+### Phase 5A Tasks
+1. Create useShakeDetection hook with expo-sensors Accelerometer
+2. Add shake toggle button to HomeScreen (amber styling)
+3. Integrate shake detection with CountdownOverlay
+4. Handle shake/voice detection state in handleCountdownConfirm/Cancel
+5. Build and deploy updated APK via EAS
 
 ---
 
@@ -450,7 +499,7 @@ RootNavigator
 │       └── NavigationContent
 │           ├── IF authenticated:
 │           │   └── AppStack
-│           │       ├── Home (SOS button, voice detection)
+│           │       ├── Home (SOS button, voice/shake detection)
 │           │       ├── Status (evidence, recording status)
 │           │       ├── Contacts (emergency contact management)
 │           │       └── Tracking (live map view)
@@ -597,6 +646,10 @@ English:           Hindi:
                ▼
 ┌──────────────────────────────────────────┐
 │ Request microphone permission             │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
 │ Start continuous speech recognition       │
 │ contextualStrings: [distress keywords]    │
 └──────────────┬───────────────────────────┘
@@ -804,7 +857,7 @@ Firebase Storage Bucket:
 
 ---
 
-# Chapter 9: Phase 4 - Admin Dashboard
+# Chapter 9: Phase 4A - Admin Dashboard
 
 ## 9.1 Overview
 
@@ -931,24 +984,36 @@ firebase init hosting  # public: dashboard/dist, SPA: yes
 
 # 4. Deploy
 firebase deploy --only hosting
-
-# Result: https://student-attendence-5f147.web.app
 ```
 
-## 9.7 Phase 4B: Advanced Dashboard Features
+---
+
+# Chapter 10: Phase 4B - Advanced Dashboard Features
+
+## 10.1 Overview
 
 Phase 4B adds four advanced features to the admin dashboard: event status management, interactive maps, CSV export, and analytics charts.
 
-### 9.7.1 Event Status Management
+## 10.2 Event Status Management
 
 Admins can now change event status directly from the Event Detail page. Two action buttons are available:
 
 - **Acknowledge** — Visible when status is `triggered` or `dispatched`. Marks the event as being reviewed.
 - **Resolve** — Available for any non-resolved event. Marks the event as handled.
 
-Both actions include a confirmation dialog and update the Firestore document's `status` and `updated_at` fields in real-time.
+Both actions include a confirmation dialog and update the Firestore document's `status` and `updated_at` fields in real-time. Actions are hidden once the event reaches `resolved` status.
 
-### 9.7.2 Interactive Map (Leaflet + OpenStreetMap)
+### Implementation
+
+```typescript
+// dashboard/src/lib/firestore.ts
+export async function updateEventStatus(eventId: string, status: SOSStatus): Promise<void> {
+  const ref = doc(db, 'sos_events', eventId);
+  await updateDoc(ref, { status, updated_at: Date.now() });
+}
+```
+
+## 10.3 Interactive Map (Leaflet + OpenStreetMap)
 
 Each event's GPS coordinates are displayed on an interactive map powered by Leaflet with OpenStreetMap tiles. The map includes:
 - Zoom controls
@@ -959,9 +1024,9 @@ Each event's GPS coordinates are displayed on an interactive map powered by Leaf
 <p align="center">
   <img src="images/dashboard-detail-4b.png" alt="Event Detail with Actions and Map" width="700" />
 </p>
-<p align="center"><em>Figure 9.5: Event Detail Page with Acknowledge/Resolve Actions and Interactive Map</em></p>
+<p align="center"><em>Figure 10.1: Event Detail Page with Acknowledge/Resolve Actions and Interactive Map</em></p>
 
-### 9.7.3 CSV Export
+## 10.4 CSV Export
 
 The Events Table now includes an "Export CSV" button that downloads the currently filtered events as a CSV file. Features:
 - Exports exactly what's visible (respects email filter)
@@ -970,7 +1035,7 @@ The Events Table now includes an "Export CSV" button that downloads the currentl
 - Unicode BOM for Excel compatibility
 - Auto-named: `sos-events-YYYY-MM-DD.csv`
 
-### 9.7.4 Analytics Charts (Recharts)
+## 10.5 Analytics Charts (Recharts)
 
 The main dashboard now includes two analytics charts between the stats bar and events table:
 
@@ -980,17 +1045,9 @@ The main dashboard now includes two analytics charts between the stats bar and e
 <p align="center">
   <img src="images/dashboard-analytics.png" alt="Dashboard with Analytics" width="700" />
 </p>
-<p align="center"><em>Figure 9.6: Dashboard with Analytics Charts, CSV Export, and Status Badges</em></p>
+<p align="center"><em>Figure 10.2: Dashboard with Analytics Charts, CSV Export, and Status Badges</em></p>
 
-### 9.7.5 New Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `leaflet` + `react-leaflet` | Interactive map component |
-| `recharts` | Area chart and pie/donut chart |
-| `@types/leaflet` | TypeScript definitions for Leaflet |
-
-### 9.7.6 New Files
+## 10.6 New Files & Dependencies
 
 | File | Purpose |
 |------|---------|
@@ -1000,11 +1057,156 @@ The main dashboard now includes two analytics charts between the stats bar and e
 | `dashboard/src/components/EventsOverTimeChart.tsx` | 30-day area chart |
 | `dashboard/src/components/TriggerTypeChart.tsx` | Trigger type donut chart |
 
+| Package | Purpose |
+|---------|---------|
+| `leaflet` + `react-leaflet` | Interactive map component |
+| `recharts` | Area chart and pie/donut chart |
+| `@types/leaflet` | TypeScript definitions for Leaflet |
+
 ---
 
-# Chapter 10: Integration Processes
+# Chapter 11: Phase 5A - Shake Detection
 
-## 10.1 Firebase Integration
+## 11.1 Overview
+
+Shake detection allows users to trigger SOS by shaking their phone 3 times within 2 seconds. This is critical for situations where users cannot look at or touch their screen — such as being physically restrained, in darkness, or when the phone is in a pocket.
+
+## 11.2 How It Works
+
+```
+Phone Accelerometer (expo-sensors)
+         │
+         ▼
+  Monitor G-force (100ms interval)
+         │
+         ▼
+  Force > 1.8G threshold?
+    │              │
+   NO             YES
+    │              │
+    ▼              ▼
+ Continue     Record shake timestamp
+              Cooldown: 500ms between shakes
+              │
+              ▼
+         3 shakes within 2 seconds?
+           │              │
+          NO             YES
+           │              │
+           ▼              ▼
+        Continue    Stop accelerometer
+                    Show Countdown
+                    Overlay (10 sec)
+                         │
+                    ┌────┴────┐
+                    │         │
+                 Cancel    Timer expires
+                    │         │
+                    ▼         ▼
+                Resume    Trigger SOS
+                shake     (type: "shake")
+                monitor
+```
+
+## 11.3 Configuration
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| `SHAKE_THRESHOLD` | 1.8 G | Minimum force to register as a shake |
+| `SHAKE_COUNT_NEEDED` | 3 | Number of shakes needed — prevents accidental triggers |
+| `SHAKE_WINDOW_MS` | 2000ms | All 3 shakes must occur within this time window |
+| `COOLDOWN_MS` | 500ms | Minimum time between individual shake events |
+| Update interval | 100ms | Accelerometer polling rate |
+
+## 11.4 Home Screen Integration
+
+The Home Screen now has three trigger methods — SOS button, voice detection, and shake detection. Each has its own toggle button with distinct styling:
+
+<p align="center">
+  <img src="images/mobile-home-full.png" alt="Home Screen with All Triggers" width="280" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="images/mobile-shake-active.png" alt="Shake Detection Active" width="280" />
+</p>
+<p align="center"><em>Figure 11.1: Home Screen with All Triggers (left) and Shake Detection Active (right)</em></p>
+
+- **Voice Detection Button** — Red border when active (#EF4444), dark red background
+- **Shake Detection Button** — Amber border when active (#F59E0B), dark amber background
+- **Shake Indicator** — Amber text: "Shake 3x to trigger SOS"
+
+### Both Detections Active Simultaneously
+
+Users can enable both voice and shake detection at the same time for maximum coverage.
+
+<p align="center">
+  <img src="images/mobile-both-active.png" alt="Both Detections Active" width="280" />
+</p>
+<p align="center"><em>Figure 11.2: Both Voice and Shake Detection Active Simultaneously</em></p>
+
+## 11.5 Shake-Triggered Countdown
+
+When 3 shakes are detected within the time window, the countdown overlay appears with "Shake Detected" as the keyword. The shake monitor is stopped during the countdown.
+
+<p align="center">
+  <img src="images/mobile-countdown-shake.png" alt="Countdown for Shake" width="280" />
+</p>
+<p align="center"><em>Figure 11.3: Countdown Overlay — Triggered by Shake Detection</em></p>
+
+If the user cancels, the shake monitor resumes. If the timer expires, an SOS event is created with `triggerType: "shake"`.
+
+## 11.6 Implementation
+
+### Hook: `useShakeDetection`
+
+```typescript
+// mobile/src/hooks/useShakeDetection.ts
+export function useShakeDetection(): UseShakeDetectionReturn {
+  // Uses expo-sensors Accelerometer
+  // Calculates total G-force: sqrt(x² + y² + z²)
+  // Tracks shake timestamps in a sliding window
+  // Returns: { isActive, shakeDetected, start, stop, clearDetection }
+}
+```
+
+### HomeScreen Integration
+
+```typescript
+// Handle shake detection in HomeScreen
+const { isActive: isShakeActive, shakeDetected, start: startShake, stop: stopShake } = useShakeDetection();
+
+// When shake is detected, show countdown
+React.useEffect(() => {
+  if (shakeDetected) {
+    stopShake();           // Stop monitoring during countdown
+    setShowCountdown(true);
+  }
+}, [shakeDetected]);
+
+// On cancel → restart shake monitor
+// On confirm → trigger SOS with type: "shake"
+```
+
+### Trigger Type
+
+The `"shake"` trigger type was already defined in the shared schemas:
+
+```typescript
+// shared-schemas/src/sos-event.ts
+export type TriggerType = 'manual' | 'voice' | 'shake';
+```
+
+```python
+# shared-schemas/python/sos_event.py
+class TriggerType(str, Enum):
+    MANUAL = "manual"
+    VOICE = "voice"
+    SHAKE = "shake"
+```
+
+---
+
+# Chapter 12: Integration Processes
+
+## 12.1 Firebase Integration
 
 ### Authentication Flow
 
@@ -1063,7 +1265,7 @@ Firestore Database
         └── role: "admin"
 ```
 
-## 10.2 Twilio SMS Integration
+## 12.2 Twilio SMS Integration
 
 ### Setup Steps
 
@@ -1091,7 +1293,7 @@ for contact in emergency_contacts:
     )
 ```
 
-## 10.3 Google Maps Integration
+## 12.3 Google Maps Integration
 
 ```python
 # Simple URL generation for location sharing
@@ -1103,7 +1305,7 @@ This URL is included in:
 - FCM push notification payloads
 - Dashboard event detail page
 
-## 10.4 FCM Push Notification Integration
+## 12.4 FCM Push Notification Integration
 
 ```
 Mobile App Startup
@@ -1131,7 +1333,7 @@ firebase_admin.messaging.send()
 Push notification delivered to contacts' devices
 ```
 
-## 10.5 Expo Speech Recognition Integration
+## 12.5 Expo Speech Recognition Integration
 
 ```
 Mobile App
@@ -1149,11 +1351,29 @@ Real-time transcript events
 Keyword matching (client-side, no network needed)
 ```
 
+## 12.6 Expo Sensors (Accelerometer) Integration
+
+```
+Mobile App
+    │
+    ▼
+expo-sensors (Accelerometer module)
+    │
+    ▼
+100ms polling interval
+    │
+    ▼
+G-force calculation: sqrt(x² + y² + z²)
+    │
+    ▼
+Threshold + sliding window detection (client-side)
+```
+
 ---
 
-# Chapter 11: Deployment & DevOps
+# Chapter 13: Deployment & DevOps
 
-## 11.1 Backend Deployment (Render)
+## 13.1 Backend Deployment (Render)
 
 ```
 GitHub Repository (main branch)
@@ -1177,7 +1397,7 @@ Render Web Service
 | `TWILIO_FROM_PHONE` | Twilio sender phone number |
 | `OPENAI_API_KEY` | OpenAI API key (for Whisper fallback) |
 
-## 11.2 Dashboard Deployment (Firebase Hosting)
+## 13.2 Dashboard Deployment (Firebase Hosting)
 
 ```bash
 # Build
@@ -1203,7 +1423,7 @@ firebase deploy --only hosting
 }
 ```
 
-## 11.3 Mobile App Build (EAS)
+## 13.3 Mobile App Build (EAS)
 
 ```bash
 # Install EAS CLI
@@ -1239,7 +1459,7 @@ eas build --platform android --profile production
 }
 ```
 
-## 11.4 App Icons
+## 13.4 App Icons
 
 The Guardian app uses a custom shield + signal icon across all platforms:
 
@@ -1250,13 +1470,13 @@ The Guardian app uses a custom shield + signal icon across all platforms:
   &nbsp;&nbsp;
   <img src="images/notification-icon.png" alt="Notification Icon" width="50" />
 </p>
-<p align="center"><em>Figure 11.1: App Icon, Adaptive Icon (Android), and Notification Icon</em></p>
+<p align="center"><em>Figure 13.1: App Icon, Adaptive Icon (Android), and Notification Icon</em></p>
 
 ---
 
-# Chapter 12: Security Implementation
+# Chapter 14: Security Implementation
 
-## 12.1 Authentication Security
+## 14.1 Authentication Security
 
 | Layer | Method |
 |-------|--------|
@@ -1265,7 +1485,7 @@ The Guardian app uses a custom shield + signal icon across all platforms:
 | Dashboard Auth | Firebase Auth + admin whitelist check |
 | Token Verification | firebase-admin verify_id_token() on backend |
 
-## 12.2 Firestore Security Rules
+## 14.2 Firestore Security Rules
 
 ```javascript
 rules_version = '2';
@@ -1295,7 +1515,7 @@ service cloud.firestore {
 }
 ```
 
-## 12.3 Firebase Storage Security Rules
+## 14.3 Firebase Storage Security Rules
 
 ```javascript
 rules_version = '2';
@@ -1308,7 +1528,7 @@ service firebase.storage {
 }
 ```
 
-## 12.4 API Security
+## 14.4 API Security
 
 - CORS enabled for all origins (development convenience)
 - All SOS endpoints require authenticated Firebase token
@@ -1317,9 +1537,9 @@ service firebase.storage {
 
 ---
 
-# Chapter 13: Testing & Verification
+# Chapter 15: Testing & Verification
 
-## 13.1 TypeScript Type Checking
+## 15.1 TypeScript Type Checking
 
 ```bash
 # Mobile
@@ -1329,7 +1549,7 @@ cd mobile && npx tsc --noEmit
 cd dashboard && npx tsc --noEmit
 ```
 
-## 13.2 Backend Testing
+## 15.2 Backend Testing
 
 ```bash
 cd backend
@@ -1338,21 +1558,21 @@ poetry run ruff check .              # Lint check
 poetry run ruff format .             # Format code
 ```
 
-## 13.3 Health Check Verification
+## 15.3 Health Check Verification
 
 ```bash
 curl https://guardian-api-dyuw.onrender.com/health
 # Expected: {"status":"healthy"}
 ```
 
-## 13.4 SOS Simulation
+## 15.4 SOS Simulation
 
 ```bash
 bash scripts/simulate-sos.sh
 # Sends a mock SOS event to the backend for testing
 ```
 
-## 13.5 Build Verification
+## 15.5 Build Verification
 
 ```bash
 # Dashboard build
@@ -1366,70 +1586,7 @@ cd mobile && eas build --platform android --profile preview
 
 ---
 
-# Chapter 14: Future Scope
-
-## Phase 4B: Advanced Dashboard Features — Completed
-- ~~Analytics and event heatmaps~~ — Completed (area chart + donut chart)
-- ~~Export reports (CSV/PDF)~~ — Completed (CSV export)
-- ~~Map integration for event visualization~~ — Completed (Leaflet/OpenStreetMap)
-- ~~Event status management (resolve/acknowledge from dashboard)~~ — Completed
-- Multi-admin RBAC (role-based access control)
-- PDF report export
-
-## Phase 5A: Shake Detection — Completed
-
-Shake detection allows users to trigger SOS by shaking their phone 3 times within 2 seconds. This is critical for situations where users cannot look at or touch their screen.
-
-### How It Works
-
-```
-Phone Accelerometer (expo-sensors)
-         │
-         ▼
-  Monitor G-force (100ms interval)
-         │
-         ▼
-  Force > 1.8G threshold?
-    │              │
-   NO             YES
-    │              │
-    ▼              ▼
- Continue     Record shake timestamp
-              │
-              ▼
-         3 shakes within 2 seconds?
-           │              │
-          NO             YES
-           │              │
-           ▼              ▼
-        Continue    Show Countdown
-                    Overlay (10 sec)
-                         │
-                    ┌────┴────┐
-                    │         │
-                 Cancel    Timer expires
-                    │         │
-                    ▼         ▼
-                Resume    Trigger SOS
-                shake     (type: "shake")
-                monitor
-```
-
-### Configuration
-
-| Parameter | Value | Purpose |
-|-----------|-------|---------|
-| Threshold | 1.8 G | Minimum force to register as shake |
-| Shakes needed | 3 | Prevents accidental triggers |
-| Time window | 2000ms | All 3 shakes must occur within this window |
-| Cooldown | 500ms | Minimum time between individual shakes |
-| Update interval | 100ms | Accelerometer polling rate |
-
-### Implementation
-
-- **Hook:** `mobile/src/hooks/useShakeDetection.ts` — Uses `expo-sensors` Accelerometer
-- **Integration:** Toggle button on HomeScreen (amber color when active)
-- **Trigger type:** `"shake"` — already defined in shared-schemas
+# Chapter 16: Future Scope
 
 ## Phase 5B: Remaining AI Features
 - Sentiment analysis on voice transcripts
@@ -1437,12 +1594,15 @@ Phone Accelerometer (expo-sensors)
 - Multi-language voice detection (beyond English/Hindi)
 - Noise cancellation for better recognition
 
-## Phase 6: Community & Scale
+## Phase 6: Advanced Platform Features
+- Multi-admin RBAC (role-based access control)
+- PDF report export from dashboard
 - Organization management (schools, workplaces)
 - Geofencing alerts (safe/danger zones)
 - Integration with local emergency services (112/911)
 - Wearable device support (smartwatch companion)
 - End-to-end encryption for evidence
+- iOS support and App Store deployment
 
 ---
 
@@ -1521,6 +1681,8 @@ cd dashboard && npm run dev
 }
 ```
 
+**Trigger Types:** `"manual"` | `"voice"` | `"shake"`
+
 ## POST /sos/voice-detect
 
 **Authentication:** Bearer token
@@ -1564,6 +1726,17 @@ cd dashboard && npm run dev
 <p align="center"><em>Login | Register | Home (Dark) | Home (Light)</em></p>
 
 <p align="center">
+  <img src="images/mobile-home-full.png" alt="Home Full" width="200" />
+  &nbsp;
+  <img src="images/mobile-shake-active.png" alt="Shake Active" width="200" />
+  &nbsp;
+  <img src="images/mobile-both-active.png" alt="Both Active" width="200" />
+  &nbsp;
+  <img src="images/mobile-countdown-shake.png" alt="Countdown Shake" width="200" />
+</p>
+<p align="center"><em>Home (All Triggers) | Shake Active | Both Active | Shake Countdown</em></p>
+
+<p align="center">
   <img src="images/mobile-voice-listening.png" alt="Voice Listening" width="200" />
   &nbsp;
   <img src="images/mobile-countdown.png" alt="Countdown" width="200" />
@@ -1572,7 +1745,7 @@ cd dashboard && npm run dev
   &nbsp;
   <img src="images/mobile-contacts.png" alt="Contacts" width="200" />
 </p>
-<p align="center"><em>Voice Detection | Countdown Overlay | Status & Evidence | Contacts</em></p>
+<p align="center"><em>Voice Detection | Voice Countdown | Status & Evidence | Contacts</em></p>
 
 <p align="center">
   <img src="images/mobile-tracking.png" alt="Tracking" width="200" />
@@ -1589,22 +1762,45 @@ cd dashboard && npm run dev
 <p align="center"><em>Admin Login</em></p>
 
 <p align="center">
+  <img src="images/dashboard-main.png" alt="Dashboard Main" width="700" />
+</p>
+<p align="center"><em>Dashboard Home — Stats Bar, Events Table, Activity Feed</em></p>
+
+<p align="center">
   <img src="images/dashboard-analytics.png" alt="Dashboard with Analytics" width="700" />
 </p>
-<p align="center"><em>Dashboard Home — Stats, Analytics Charts, Events Table with CSV Export, Activity Feed</em></p>
+<p align="center"><em>Dashboard with Analytics — Events Over Time Chart, Trigger Type Chart, CSV Export</em></p>
+
+<p align="center">
+  <img src="images/dashboard-event-detail.png" alt="Event Detail" width="700" />
+</p>
+<p align="center"><em>Event Detail — Metadata, Audio Player, Video Player, Photo Preview</em></p>
 
 <p align="center">
   <img src="images/dashboard-detail-4b.png" alt="Event Detail with Actions and Map" width="700" />
 </p>
-<p align="center"><em>Event Detail — Actions (Acknowledge/Resolve), Interactive Map, Evidence Player</em></p>
+<p align="center"><em>Event Detail (4B) — Acknowledge/Resolve Actions, Interactive Map</em></p>
 
 <p align="center">
   <img src="images/dashboard-users.png" alt="Users" width="700" />
 </p>
-<p align="center"><em>Users Page — List with Expandable Emergency Contacts</em></p>
+<p align="center"><em>Users Page — User List with Expandable Emergency Contacts</em></p>
+
+## App Icons
+
+<p align="center">
+  <img src="images/app-icon.png" alt="App Icon" width="120" />
+  &nbsp;&nbsp;
+  <img src="images/adaptive-icon.png" alt="Adaptive Icon" width="120" />
+  &nbsp;&nbsp;
+  <img src="images/splash-icon.png" alt="Splash" width="120" />
+  &nbsp;&nbsp;
+  <img src="images/notification-icon.png" alt="Notification" width="60" />
+</p>
+<p align="center"><em>App Icon | Adaptive Icon | Splash | Notification Icon</em></p>
 
 ---
 
-*Document Version: 2.2*
+*Document Version: 3.0*
 *Last Updated: March 31, 2026*
-*Project Guardian - AI-Powered Smart Mobile Safety System*
+*Total Phases Completed: 6 (Phase 1, 2, 3, 4A, 4B, 5A)*
