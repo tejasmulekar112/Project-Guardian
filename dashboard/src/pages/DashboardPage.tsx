@@ -4,6 +4,8 @@ import { useStats } from '../hooks/useStats';
 import { StatsBar } from '../components/StatsBar';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { EventsTable } from '../components/EventsTable';
+import { EventsOverTimeChart } from '../components/EventsOverTimeChart';
+import { TriggerTypeChart } from '../components/TriggerTypeChart';
 import { NavLayout } from '../components/NavLayout';
 
 export function DashboardPage() {
@@ -30,6 +32,10 @@ export function DashboardPage() {
           eventsToday={stats.eventsToday}
           totalUsers={stats.totalUsers}
         />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EventsOverTimeChart events={events} />
+          <TriggerTypeChart events={events} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <EventsTable events={events} userEmails={userEmails} />

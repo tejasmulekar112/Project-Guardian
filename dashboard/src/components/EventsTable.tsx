@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SOSEvent } from '@guardian/shared-schemas';
 import { StatusBadge } from './StatusBadge';
+import { exportEventsToCSV } from '../lib/csv-export';
 
 interface EventsTableProps {
   events: SOSEvent[];
@@ -27,13 +28,21 @@ export function EventsTable({ events, userEmails }: EventsTableProps) {
     <div className="bg-gray-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-white">SOS Events</h2>
-        <input
-          type="text"
-          placeholder="Filter by email..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportEventsToCSV(filtered, userEmails)}
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition-colors"
+          >
+            Export CSV
+          </button>
+          <input
+            type="text"
+            placeholder="Filter by email..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-md text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">

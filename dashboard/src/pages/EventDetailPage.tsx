@@ -5,6 +5,8 @@ import { db } from '../config/firebase';
 import { NavLayout } from '../components/NavLayout';
 import { StatusBadge } from '../components/StatusBadge';
 import { EvidencePlayer } from '../components/EvidencePlayer';
+import { EventMap } from '../components/EventMap';
+import { updateEventStatus } from '../lib/firestore';
 import type { SOSStatus, TriggerType, GeoLocation } from '@guardian/shared-schemas';
 
 interface EventDetail {
@@ -27,6 +29,8 @@ export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<EventDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!eventId) return;
@@ -52,6 +56,20 @@ export function EventDetailPage() {
     });
     return unsubscribe;
   }, [eventId]);
+
+  const handleStatusChange = async (newStatus: SOSStatus) => {
+    if (!eventId) return;
+    if (!window.confirm(`Change status to "${newStatus}"?`)) return;
+    setUpdating(true);
+    setStatusError(null);
+    try {
+      await updateEventStatus(eventId, newStatus);
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : 'Failed to update status');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -115,6 +133,41 @@ export function EventDetailPage() {
               </div>
             )}
           </dl>
+        </div>
+
+        {event.status !== 'resolved' && (
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Actions</h2>
+            <div className="flex gap-3">
+              {(event.status === 'triggered' || event.status === 'dispatched') && (
+                <button
+                  onClick={() => handleStatusChange('acknowledged')}
+                  disabled={updating}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-md transition-colors"
+                >
+                  {updating ? 'Updating...' : 'Acknowledge'}
+                </button>
+              )}
+              <button
+                onClick={() => handleStatusChange('resolved')}
+                disabled={updating}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium rounded-md transition-colors"
+              >
+                {updating ? 'Updating...' : 'Resolve'}
+              </button>
+            </div>
+            {statusError && (
+              <p className="text-red-400 text-sm mt-2">{statusError}</p>
+            )}
+          </div>
+        )}
+
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Location</h2>
+          <EventMap
+            latitude={event.location.latitude}
+            longitude={event.location.longitude}
+          />
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6">
