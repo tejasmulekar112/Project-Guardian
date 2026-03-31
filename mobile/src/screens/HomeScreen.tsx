@@ -8,6 +8,7 @@ import { VoiceIndicator } from '../components/VoiceIndicator';
 import { useLocation } from '../hooks/useLocation';
 import { useAuth } from '../contexts/AuthContext';
 import { useVoiceDetection } from '../hooks/useVoiceDetection';
+import { useShakeDetection } from '../hooks/useShakeDetection';
 import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
 import { useTheme } from '../theme/ThemeContext';
 import { triggerSOS } from '../services/api';
@@ -38,6 +39,14 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     stopListening,
     clearDetection,
   } = useVoiceDetection();
+
+  const {
+    isActive: isShakeActive,
+    shakeDetected,
+    start: startShake,
+    stop: stopShake,
+    clearDetection: clearShake,
+  } = useShakeDetection();
 
   const { state: recorderState, cameraRef, startRecording } = useEvidenceRecorder();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -93,19 +102,36 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     }
   }, [detection]);
 
+  // When shake is detected, show countdown
+  React.useEffect(() => {
+    if (shakeDetected) {
+      stopShake();
+      setShowCountdown(true);
+    }
+  }, [shakeDetected, stopShake]);
+
   const handleCountdownConfirm = useCallback(() => {
     setShowCountdown(false);
-    const transcript = detection?.transcript ?? '';
-    void handleSOS('voice', `Voice detected: "${transcript}"`);
-    clearDetection();
-  }, [detection, handleSOS, clearDetection]);
+    if (shakeDetected) {
+      clearShake();
+      void handleSOS('shake', 'Shake detected');
+    } else {
+      const transcript = detection?.transcript ?? '';
+      void handleSOS('voice', `Voice detected: "${transcript}"`);
+      clearDetection();
+    }
+  }, [detection, shakeDetected, handleSOS, clearDetection, clearShake]);
 
   const handleCountdownCancel = useCallback(() => {
     setShowCountdown(false);
-    clearDetection();
-    // Resume listening
-    void startListening();
-  }, [clearDetection, startListening]);
+    if (shakeDetected) {
+      clearShake();
+      startShake();
+    } else {
+      clearDetection();
+      void startListening();
+    }
+  }, [shakeDetected, clearDetection, clearShake, startListening, startShake]);
 
   const toggleListening = useCallback(async () => {
     if (isListening) {
@@ -115,11 +141,19 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     }
   }, [isListening, startListening, stopListening]);
 
+  const toggleShake = useCallback(() => {
+    if (isShakeActive) {
+      stopShake();
+    } else {
+      startShake();
+    }
+  }, [isShakeActive, startShake, stopShake]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {showCountdown && detection?.keyword && (
+      {showCountdown && (detection?.keyword || shakeDetected) && (
         <CountdownOverlay
-          keyword={detection.keyword}
+          keyword={shakeDetected ? 'Shake Detected' : detection?.keyword ?? ''}
           onConfirm={handleCountdownConfirm}
           onCancel={handleCountdownCancel}
         />
@@ -162,7 +196,27 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
           </Text>
         </TouchableOpacity>
 
+        {/* Shake Detection Toggle */}
+        <TouchableOpacity
+          style={[
+            styles.voiceBtn,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+            isShakeActive && { borderColor: '#F59E0B', backgroundColor: isDark ? '#291F11' : '#FEF3C7' },
+          ]}
+          onPress={toggleShake}
+          disabled={isTriggered || sending}
+        >
+          <Text style={[styles.voiceBtnText, { color: colors.text }]}>
+            {isShakeActive ? 'Stop Shake Detection' : 'Start Shake Detection'}
+          </Text>
+        </TouchableOpacity>
+
         {isListening && <VoiceIndicator />}
+        {isShakeActive && (
+          <View style={styles.shakeIndicator}>
+            <Text style={styles.shakeIndicatorText}>Shake 3x to trigger SOS</Text>
+          </View>
+        )}
         {voiceError && <Text style={styles.errorText}>{voiceError}</Text>}
       </View>
 
@@ -232,6 +286,14 @@ const styles = StyleSheet.create({
   },
   voiceBtnText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  shakeIndicator: {
+    marginTop: 12,
+  },
+  shakeIndicatorText: {
+    color: '#F59E0B',
+    fontSize: 14,
     fontWeight: '600',
   },
   errorText: {

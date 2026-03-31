@@ -1368,18 +1368,73 @@ cd mobile && eas build --platform android --profile preview
 
 # Chapter 14: Future Scope
 
-## Phase 4B: Advanced Dashboard Features
+## Phase 4B: Advanced Dashboard Features — Completed
+- ~~Analytics and event heatmaps~~ — Completed (area chart + donut chart)
+- ~~Export reports (CSV/PDF)~~ — Completed (CSV export)
+- ~~Map integration for event visualization~~ — Completed (Leaflet/OpenStreetMap)
+- ~~Event status management (resolve/acknowledge from dashboard)~~ — Completed
 - Multi-admin RBAC (role-based access control)
-- Analytics and event heatmaps
-- Export reports (CSV/PDF)
-- Map integration for event visualization
-- Event status management (resolve/acknowledge from dashboard)
+- PDF report export
 
-## Phase 5: Advanced AI Features
+## Phase 5A: Shake Detection — Completed
+
+Shake detection allows users to trigger SOS by shaking their phone 3 times within 2 seconds. This is critical for situations where users cannot look at or touch their screen.
+
+### How It Works
+
+```
+Phone Accelerometer (expo-sensors)
+         │
+         ▼
+  Monitor G-force (100ms interval)
+         │
+         ▼
+  Force > 1.8G threshold?
+    │              │
+   NO             YES
+    │              │
+    ▼              ▼
+ Continue     Record shake timestamp
+              │
+              ▼
+         3 shakes within 2 seconds?
+           │              │
+          NO             YES
+           │              │
+           ▼              ▼
+        Continue    Show Countdown
+                    Overlay (10 sec)
+                         │
+                    ┌────┴────┐
+                    │         │
+                 Cancel    Timer expires
+                    │         │
+                    ▼         ▼
+                Resume    Trigger SOS
+                shake     (type: "shake")
+                monitor
+```
+
+### Configuration
+
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| Threshold | 1.8 G | Minimum force to register as shake |
+| Shakes needed | 3 | Prevents accidental triggers |
+| Time window | 2000ms | All 3 shakes must occur within this window |
+| Cooldown | 500ms | Minimum time between individual shakes |
+| Update interval | 100ms | Accelerometer polling rate |
+
+### Implementation
+
+- **Hook:** `mobile/src/hooks/useShakeDetection.ts` — Uses `expo-sensors` Accelerometer
+- **Integration:** Toggle button on HomeScreen (amber color when active)
+- **Trigger type:** `"shake"` — already defined in shared-schemas
+
+## Phase 5B: Remaining AI Features
 - Sentiment analysis on voice transcripts
-- Shake detection for SOS trigger
 - Smart battery optimization for background listening
-- Multi-language voice detection
+- Multi-language voice detection (beyond English/Hindi)
 - Noise cancellation for better recognition
 
 ## Phase 6: Community & Scale
@@ -1550,6 +1605,6 @@ cd dashboard && npm run dev
 
 ---
 
-*Document Version: 2.1*
+*Document Version: 2.2*
 *Last Updated: March 31, 2026*
 *Project Guardian - AI-Powered Smart Mobile Safety System*
