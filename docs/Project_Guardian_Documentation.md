@@ -23,7 +23,7 @@
 6. [Phase 1: Core SOS & Location Tracking](#chapter-6-phase-1-core-sos--location-tracking)
 7. [Phase 2: AI Voice Detection](#chapter-7-phase-2-ai-voice-detection)
 8. [Phase 3: Evidence Collection & Cloud Upload](#chapter-8-phase-3-evidence-collection--cloud-upload)
-9. [Phase 4: Admin Dashboard](#chapter-9-phase-4-admin-dashboard)
+9. [Phase 4: Admin Dashboard & Advanced Features](#chapter-9-phase-4-admin-dashboard)
 10. [Integration Processes](#chapter-10-integration-processes)
 11. [Deployment & DevOps](#chapter-11-deployment--devops)
 12. [Security Implementation](#chapter-12-security-implementation)
@@ -935,6 +935,71 @@ firebase deploy --only hosting
 # Result: https://student-attendence-5f147.web.app
 ```
 
+## 9.7 Phase 4B: Advanced Dashboard Features
+
+Phase 4B adds four advanced features to the admin dashboard: event status management, interactive maps, CSV export, and analytics charts.
+
+### 9.7.1 Event Status Management
+
+Admins can now change event status directly from the Event Detail page. Two action buttons are available:
+
+- **Acknowledge** — Visible when status is `triggered` or `dispatched`. Marks the event as being reviewed.
+- **Resolve** — Available for any non-resolved event. Marks the event as handled.
+
+Both actions include a confirmation dialog and update the Firestore document's `status` and `updated_at` fields in real-time.
+
+### 9.7.2 Interactive Map (Leaflet + OpenStreetMap)
+
+Each event's GPS coordinates are displayed on an interactive map powered by Leaflet with OpenStreetMap tiles. The map includes:
+- Zoom controls
+- Draggable/scrollable navigation
+- Blue marker at event location with coordinate popup
+- No API key required (uses free OpenStreetMap)
+
+<p align="center">
+  <img src="images/dashboard-detail-4b.png" alt="Event Detail with Actions and Map" width="700" />
+</p>
+<p align="center"><em>Figure 9.5: Event Detail Page with Acknowledge/Resolve Actions and Interactive Map</em></p>
+
+### 9.7.3 CSV Export
+
+The Events Table now includes an "Export CSV" button that downloads the currently filtered events as a CSV file. Features:
+- Exports exactly what's visible (respects email filter)
+- Includes columns: Timestamp, User, Trigger Type, Status, Latitude, Longitude, Message
+- Proper CSV escaping for fields with commas/quotes
+- Unicode BOM for Excel compatibility
+- Auto-named: `sos-events-YYYY-MM-DD.csv`
+
+### 9.7.4 Analytics Charts (Recharts)
+
+The main dashboard now includes two analytics charts between the stats bar and events table:
+
+- **Events Over Time** — An area chart showing event count per day for the last 30 days. Blue gradient fill with grid lines.
+- **Trigger Type Breakdown** — A donut chart showing the distribution of trigger types (manual, voice, shake) with color-coded legend.
+
+<p align="center">
+  <img src="images/dashboard-analytics.png" alt="Dashboard with Analytics" width="700" />
+</p>
+<p align="center"><em>Figure 9.6: Dashboard with Analytics Charts, CSV Export, and Status Badges</em></p>
+
+### 9.7.5 New Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `leaflet` + `react-leaflet` | Interactive map component |
+| `recharts` | Area chart and pie/donut chart |
+| `@types/leaflet` | TypeScript definitions for Leaflet |
+
+### 9.7.6 New Files
+
+| File | Purpose |
+|------|---------|
+| `dashboard/src/lib/firestore.ts` | Firestore write operations (updateEventStatus) |
+| `dashboard/src/lib/csv-export.ts` | CSV generation and download utility |
+| `dashboard/src/components/EventMap.tsx` | Leaflet map with marker |
+| `dashboard/src/components/EventsOverTimeChart.tsx` | 30-day area chart |
+| `dashboard/src/components/TriggerTypeChart.tsx` | Trigger type donut chart |
+
 ---
 
 # Chapter 10: Integration Processes
@@ -1469,14 +1534,14 @@ cd dashboard && npm run dev
 <p align="center"><em>Admin Login</em></p>
 
 <p align="center">
-  <img src="images/dashboard-main.png" alt="Dashboard Main" width="700" />
+  <img src="images/dashboard-analytics.png" alt="Dashboard with Analytics" width="700" />
 </p>
-<p align="center"><em>Dashboard Home — Stats, Events Table, Activity Feed</em></p>
+<p align="center"><em>Dashboard Home — Stats, Analytics Charts, Events Table with CSV Export, Activity Feed</em></p>
 
 <p align="center">
-  <img src="images/dashboard-event-detail.png" alt="Event Detail" width="700" />
+  <img src="images/dashboard-detail-4b.png" alt="Event Detail with Actions and Map" width="700" />
 </p>
-<p align="center"><em>Event Detail — Metadata & Evidence Player</em></p>
+<p align="center"><em>Event Detail — Actions (Acknowledge/Resolve), Interactive Map, Evidence Player</em></p>
 
 <p align="center">
   <img src="images/dashboard-users.png" alt="Users" width="700" />
@@ -1485,6 +1550,6 @@ cd dashboard && npm run dev
 
 ---
 
-*Document Version: 2.0*
+*Document Version: 2.1*
 *Last Updated: March 31, 2026*
 *Project Guardian - AI-Powered Smart Mobile Safety System*
