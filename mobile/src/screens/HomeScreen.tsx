@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, Text, Alert, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, Text, Alert } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SOSButton } from '../components/SOSButton';
@@ -11,6 +11,7 @@ import { useVoiceDetection } from '../hooks/useVoiceDetection';
 import { useShakeDetection } from '../hooks/useShakeDetection';
 import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
 import { useTheme } from '../theme/ThemeContext';
+import { ProfileMenu } from '../components/ProfileMenu';
 import { triggerSOS } from '../services/api';
 import type { GeoLocation, TriggerType } from '@guardian/shared-schemas';
 
@@ -25,7 +26,7 @@ interface HomeScreenProps {
 
 export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const { user, signOut } = useAuth();
-  const { colors, toggleTheme, isDark } = useTheme();
+  const { colors } = useTheme();
   const { location, refresh: refreshLocation } = useLocation();
   const [isTriggered, setIsTriggered] = useState(false);
   const [sending, setSending] = useState(false);
@@ -105,10 +106,9 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   // When shake is detected, show countdown
   React.useEffect(() => {
     if (shakeDetected) {
-      stopShake();
       setShowCountdown(true);
     }
-  }, [shakeDetected, stopShake]);
+  }, [shakeDetected]);
 
   const handleCountdownConfirm = useCallback(() => {
     setShowCountdown(false);
@@ -126,28 +126,23 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     setShowCountdown(false);
     if (shakeDetected) {
       clearShake();
-      startShake();
     } else {
       clearDetection();
       void startListening();
     }
-  }, [shakeDetected, clearDetection, clearShake, startListening, startShake]);
+  }, [shakeDetected, clearDetection, clearShake, startListening]);
 
-  const toggleListening = useCallback(async () => {
-    if (isListening) {
-      await stopListening();
-    } else {
-      await startListening();
-    }
-  }, [isListening, startListening, stopListening]);
-
-  const toggleShake = useCallback(() => {
-    if (isShakeActive) {
-      stopShake();
-    } else {
+  // Auto-start voice and shake detection on mount
+  useEffect(() => {
+    if (!isTriggered && !sending) {
+      void startListening();
       startShake();
     }
-  }, [isShakeActive, startShake, stopShake]);
+    return () => {
+      void stopListening();
+      stopShake();
+    };
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -160,57 +155,21 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
       )}
 
       <View style={styles.header}>
-        <Text style={[styles.email, { color: colors.textSecondary }]}>{user?.email}</Text>
-        <View style={styles.headerButtons}>
-          <Text style={[styles.headerLink, { color: colors.info }]} onPress={toggleTheme}>
-            {isDark ? 'Light' : 'Dark'}
-          </Text>
-          <Text style={[styles.headerLink, { color: colors.info }]} onPress={() => navigation.navigate('Contacts')}>
-            Contacts
-          </Text>
-          <Text style={[styles.headerLink, { color: colors.info }]} onPress={signOut}>
-            Sign Out
-          </Text>
-        </View>
+        <Text style={[styles.appName, { color: colors.text }]}>Guardian</Text>
+        <ProfileMenu
+          email={user?.email ?? ''}
+          onContacts={() => navigation.navigate('Contacts')}
+          onSignOut={signOut}
+        />
       </View>
 
       <View style={styles.center}>
-        <Text style={[styles.title, { color: colors.text }]}>Guardian</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Press the button in an emergency</Text>
         <SOSButton onPress={() => handleSOS('manual')} disabled={isTriggered || sending} />
         {isTriggered && <Text style={[styles.status, { color: colors.success }]}>Help is on the way</Text>}
         {sending && <Text style={[styles.sending, { color: colors.warning }]}>Sending SOS...</Text>}
 
-        {/* Voice Detection Toggle */}
-        <TouchableOpacity
-          style={[
-            styles.voiceBtn,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-            isListening && { borderColor: '#EF4444', backgroundColor: isDark ? '#291111' : '#FEE2E2' },
-          ]}
-          onPress={toggleListening}
-          disabled={isTriggered || sending}
-        >
-          <Text style={[styles.voiceBtnText, { color: colors.text }]}>
-            {isListening ? 'Stop Listening' : 'Start Voice Detection'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Shake Detection Toggle */}
-        <TouchableOpacity
-          style={[
-            styles.voiceBtn,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-            isShakeActive && { borderColor: '#F59E0B', backgroundColor: isDark ? '#291F11' : '#FEF3C7' },
-          ]}
-          onPress={toggleShake}
-          disabled={isTriggered || sending}
-        >
-          <Text style={[styles.voiceBtnText, { color: colors.text }]}>
-            {isShakeActive ? 'Stop Shake Detection' : 'Start Shake Detection'}
-          </Text>
-        </TouchableOpacity>
-
+        {/* Voice & Shake Detection - always active */}
         {isListening && <VoiceIndicator />}
         {isShakeActive && (
           <View style={styles.shakeIndicator}>
@@ -241,28 +200,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingTop: 56,
+    paddingBottom: 8,
   },
-  email: {
-    fontSize: 14,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  headerLink: {
-    fontSize: 14,
+  appName: {
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
@@ -276,17 +225,6 @@ const styles = StyleSheet.create({
   sending: {
     fontSize: 16,
     marginTop: 16,
-  },
-  voiceBtn: {
-    marginTop: 24,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderWidth: 2,
-  },
-  voiceBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   shakeIndicator: {
     marginTop: 12,

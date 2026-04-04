@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { SOSEvent } from '@guardian/shared-schemas';
 import { StatusBadge } from './StatusBadge';
 import { exportEventsToCSV } from '../lib/csv-export';
+import { exportEventsToPDF } from '../lib/pdf-export';
 
 interface EventsTableProps {
   events: SOSEvent[];
@@ -29,6 +30,12 @@ export function EventsTable({ events, userEmails }: EventsTableProps) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-white">SOS Events</h2>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportEventsToPDF(filtered, userEmails)}
+            className="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-sm rounded-md transition-colors"
+          >
+            Export PDF
+          </button>
           <button
             onClick={() => exportEventsToCSV(filtered, userEmails)}
             className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-md transition-colors"
