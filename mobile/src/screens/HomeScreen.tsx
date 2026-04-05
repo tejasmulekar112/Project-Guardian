@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Text, Alert } from 'react-native';
+import { View, StyleSheet, Text, Alert, Platform, Switch } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SOSButton } from '../components/SOSButton';
@@ -12,6 +12,7 @@ import { useShakeDetection } from '../hooks/useShakeDetection';
 import { useEvidenceRecorder } from '../hooks/useEvidenceRecorder';
 import { useTheme } from '../theme/ThemeContext';
 import { ProfileMenu } from '../components/ProfileMenu';
+import { useBackgroundProtection } from '../hooks/useBackgroundProtection';
 import { triggerSOS } from '../services/api';
 import type { GeoLocation, TriggerType } from '@guardian/shared-schemas';
 
@@ -51,6 +52,14 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
 
   const { state: recorderState, cameraRef, startRecording } = useEvidenceRecorder();
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+
+  const {
+    isRunning: bgRunning,
+    isEnabled: bgEnabled,
+    toggle: toggleBg,
+    backgroundSOSEventId,
+    clearBackgroundSOS,
+  } = useBackgroundProtection();
 
   const handleSOS = useCallback(async (triggerType: TriggerType = 'manual', message?: string): Promise<void> => {
     if (!user) {
@@ -109,6 +118,14 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
       setShowCountdown(true);
     }
   }, [shakeDetected]);
+
+  // Handle background SOS trigger — navigate to StatusScreen
+  useEffect(() => {
+    if (backgroundSOSEventId) {
+      clearBackgroundSOS();
+      navigation.navigate('Status', { eventId: backgroundSOSEventId });
+    }
+  }, [backgroundSOSEventId, clearBackgroundSOS, navigation]);
 
   const handleCountdownConfirm = useCallback(() => {
     setShowCountdown(false);
@@ -177,6 +194,28 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
           </View>
         )}
         {voiceError && <Text style={styles.errorText}>{voiceError}</Text>}
+
+        {/* Background Protection Toggle (Android only) */}
+        {Platform.OS === 'android' && (
+          <View style={styles.bgProtectionContainer}>
+            <View style={styles.bgProtectionRow}>
+              <View>
+                <Text style={[styles.bgProtectionTitle, { color: colors.text }]}>
+                  Background Protection
+                </Text>
+                <Text style={[styles.bgProtectionStatus, { color: colors.textSecondary }]}>
+                  {bgRunning ? 'Active — listening for distress calls' : 'Inactive'}
+                </Text>
+              </View>
+              <Switch
+                value={bgEnabled}
+                onValueChange={toggleBg}
+                trackColor={{ false: '#767577', true: '#22C55E' }}
+                thumbColor={bgEnabled ? '#FFFFFF' : '#f4f3f4'}
+              />
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Hidden camera for evidence recording */}
@@ -244,5 +283,26 @@ const styles = StyleSheet.create({
     width: 1,
     height: 1,
     opacity: 0,
+  },
+  bgProtectionContainer: {
+    marginTop: 24,
+    paddingHorizontal: 24,
+    width: '100%',
+  },
+  bgProtectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 12,
+    padding: 16,
+  },
+  bgProtectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bgProtectionStatus: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
