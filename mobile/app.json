@@ -26,7 +26,11 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "extra": {
@@ -62,7 +66,8 @@
           "microphonePermission": "Guardian needs microphone access for voice detection.",
           "speechRecognitionPermission": "Guardian needs speech recognition to detect distress calls."
         }
-      ]
+      ],
+      "./modules/guardian-service"
     ],
     "owner": "tejasmulekar112"
   }
