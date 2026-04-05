@@ -1,5 +1,5 @@
 export type SOSStatus = 'triggered' | 'dispatched' | 'acknowledged' | 'resolved';
-export type TriggerType = 'manual' | 'voice' | 'shake';
+export type TriggerType = 'manual' | 'voice' | 'shake' | 'voice_background';
 
 export interface GeoLocation {
   latitude: number;

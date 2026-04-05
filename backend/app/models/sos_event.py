@@ -14,6 +14,7 @@ class TriggerType(str, Enum):
     MANUAL = "manual"
     VOICE = "voice"
     SHAKE = "shake"
+    VOICE_BACKGROUND = "voice_background"
 
 
 class GeoLocation(BaseModel):
