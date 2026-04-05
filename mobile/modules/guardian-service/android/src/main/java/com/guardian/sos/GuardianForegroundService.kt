@@ -8,16 +8,18 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.AudioFormat
+import android.media.AudioRecord
+import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import ai.picovoice.porcupine.Porcupine
-import ai.picovoice.porcupine.PorcupineManager
-import ai.picovoice.porcupine.PorcupineManagerCallback
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import org.vosk.Model
+import org.vosk.Recognizer
 import java.util.concurrent.Executors
 
 class GuardianForegroundService : Service() {
@@ -27,13 +29,22 @@ class GuardianForegroundService : Service() {
         private const val CHANNEL_ID = "guardian_protection"
         private const val NOTIFICATION_ID = 1001
         private const val SOS_COOLDOWN_MS = 30_000L
+        private const val SAMPLE_RATE = 16000
+
+        private val DISTRESS_KEYWORDS = listOf(
+            "help", "help me", "save me", "emergency",
+            "bachao", "bacha", "madad", "sos"
+        )
 
         @Volatile
         var isRunning = false
             private set
     }
 
-    private var porcupineManager: PorcupineManager? = null
+    private var recognizer: Recognizer? = null
+    private var model: Model? = null
+    private var audioRecord: AudioRecord? = null
+    private var isListening = false
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var sosTriggerHandler: SOSTriggerHandler
     private lateinit var audioRecorder: AudioEvidenceRecorder
@@ -59,7 +70,7 @@ class GuardianForegroundService : Service() {
         // Retry any queued SOS requests
         executor.execute { sosTriggerHandler.retryQueuedRequests() }
 
-        startPorcupine()
+        startVosk()
 
         Log.i(TAG, "Service started")
         return START_STICKY
@@ -70,46 +81,113 @@ class GuardianForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
-        stopPorcupine()
+        stopVosk()
         audioRecorder.stopRecording()
         executor.shutdown()
         Log.i(TAG, "Service destroyed")
     }
 
-    private fun startPorcupine() {
-        val accessKey = prefs.getString("porcupine_access_key", null)
-        if (accessKey.isNullOrEmpty()) {
-            Log.e(TAG, "Porcupine access key not set. Set it via GuardianService.setAuthCredentials.")
-            return
-        }
+    private fun startVosk() {
+        executor.execute {
+            try {
+                val modelDir = copyModelToInternalStorage()
+                model = Model(modelDir)
+                recognizer = Recognizer(model, SAMPLE_RATE.toFloat())
 
-        try {
-            porcupineManager = PorcupineManager.Builder()
-                .setAccessKey(accessKey)
-                .setKeywords(arrayOf(
-                    Porcupine.BuiltInKeyword.OK_GOOGLE
-                ))
-                .setSensitivities(floatArrayOf(0.7f))
-                .build(this, PorcupineManagerCallback { keywordIndex ->
-                    Log.i(TAG, "Wake word detected! Index: $keywordIndex")
-                    onWakeWordDetected()
-                })
+                val bufferSize = AudioRecord.getMinBufferSize(
+                    SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                )
 
-            porcupineManager?.start()
-            Log.i(TAG, "Porcupine started listening")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start Porcupine", e)
+                audioRecord = AudioRecord(
+                    MediaRecorder.AudioSource.MIC,
+                    SAMPLE_RATE,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                )
+
+                audioRecord?.startRecording()
+                isListening = true
+                Log.i(TAG, "Vosk started listening")
+
+                val buffer = ShortArray(bufferSize / 2)
+                while (isListening) {
+                    val read = audioRecord?.read(buffer, 0, buffer.size) ?: -1
+                    if (read > 0) {
+                        val accepted = recognizer?.acceptWaveForm(buffer, read) ?: false
+                        val text = if (accepted) {
+                            recognizer?.result ?: ""
+                        } else {
+                            recognizer?.partialResult ?: ""
+                        }
+                        checkForDistressKeywords(text)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start Vosk", e)
+            }
         }
     }
 
-    private fun stopPorcupine() {
+    private fun copyModelToInternalStorage(): String {
+        val modelDir = java.io.File(filesDir, "vosk-model")
+        if (modelDir.exists() && modelDir.list()?.isNotEmpty() == true) {
+            return modelDir.absolutePath
+        }
+        modelDir.mkdirs()
+
+        // Copy model from assets
+        val assetManager = assets
+        copyAssetFolder(assetManager, "vosk-model", modelDir.absolutePath)
+        Log.i(TAG, "Vosk model copied to ${modelDir.absolutePath}")
+        return modelDir.absolutePath
+    }
+
+    private fun copyAssetFolder(assetManager: android.content.res.AssetManager, srcPath: String, dstPath: String) {
+        val files = assetManager.list(srcPath) ?: return
+        if (files.isEmpty()) {
+            // It's a file, copy it
+            assetManager.open(srcPath).use { input ->
+                java.io.File(dstPath).outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } else {
+            // It's a directory
+            java.io.File(dstPath).mkdirs()
+            for (file in files) {
+                copyAssetFolder(assetManager, "$srcPath/$file", "$dstPath/$file")
+            }
+        }
+    }
+
+    private fun checkForDistressKeywords(jsonResult: String) {
+        // Vosk returns JSON like {"text": "help me"} or {"partial": "help"}
+        val lower = jsonResult.lowercase()
+        for (keyword in DISTRESS_KEYWORDS) {
+            if (lower.contains("\"$keyword\"") || lower.contains(" $keyword ") || lower.contains(" $keyword\"")) {
+                Log.i(TAG, "Distress keyword detected: '$keyword' in: $jsonResult")
+                onWakeWordDetected()
+                return
+            }
+        }
+    }
+
+    private fun stopVosk() {
         try {
-            porcupineManager?.stop()
-            porcupineManager?.delete()
-            porcupineManager = null
-            Log.i(TAG, "Porcupine stopped")
+            isListening = false
+            audioRecord?.stop()
+            audioRecord?.release()
+            audioRecord = null
+            recognizer?.close()
+            recognizer = null
+            model?.close()
+            model = null
+            Log.i(TAG, "Vosk stopped")
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping Porcupine", e)
+            Log.e(TAG, "Error stopping Vosk", e)
         }
     }
 

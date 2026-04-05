@@ -66,8 +66,7 @@
           "microphonePermission": "Guardian needs microphone access for voice detection.",
           "speechRecognitionPermission": "Guardian needs speech recognition to detect distress calls."
         }
-      ],
-      "./modules/guardian-service"
+      ]
     ],
     "owner": "tejasmulekar112"
   }
