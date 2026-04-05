@@ -9,6 +9,8 @@ import {
 import { auth } from '../services/firebase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { registerFcmToken } from '../services/api';
+import { Platform } from 'react-native';
+import { GuardianService } from '../../modules/guardian-service';
 
 interface AuthContextType {
   user: User | null;
@@ -25,9 +27,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+
+      // Share auth credentials with native background service (Android only)
+      if (Platform.OS === 'android') {
+        if (firebaseUser) {
+          try {
+            const token = await firebaseUser.getIdToken();
+            const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+            await GuardianService.setAuthCredentials(token, firebaseUser.uid, apiUrl);
+            // Auto-start service if enabled
+            const enabled = await GuardianService.isEnabled();
+            if (enabled) {
+              await GuardianService.startService();
+            }
+          } catch (e) {
+            console.warn('Failed to set auth credentials for background service:', e);
+          }
+        } else {
+          try {
+            await GuardianService.clearAuthCredentials();
+          } catch (e) {
+            console.warn('Failed to clear auth credentials for background service:', e);
+          }
+        }
+      }
     });
     return unsubscribe;
   }, []);
@@ -51,6 +77,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async (): Promise<void> => {
+    if (Platform.OS === 'android') {
+      try {
+        await GuardianService.clearAuthCredentials();
+      } catch (e) {
+        console.warn('Failed to clear background service credentials:', e);
+      }
+    }
     await firebaseSignOut(auth);
   };
 
