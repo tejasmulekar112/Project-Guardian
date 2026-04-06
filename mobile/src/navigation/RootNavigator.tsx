@@ -8,6 +8,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { StatusScreen } from '../screens/StatusScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
+import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
 import { ContactsScreen } from '../screens/ContactsScreen';
 import { TrackingScreen } from '../screens/TrackingScreen';
 import type { GeoLocation } from '@guardian/shared-schemas';
@@ -15,6 +16,7 @@ import type { GeoLocation } from '@guardian/shared-schemas';
 type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 };
 
 type AppStackParamList = {
@@ -39,6 +41,7 @@ const AuthNavigator = () => {
     <AuthStack.Navigator screenOptions={headerOptions}>
       <AuthStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
       <AuthStack.Screen name="Register" component={RegisterScreen} options={{ title: 'Register' }} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'Forgot Password' }} />
     </AuthStack.Navigator>
   );
 };
