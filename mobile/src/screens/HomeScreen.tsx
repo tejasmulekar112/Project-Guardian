@@ -14,6 +14,8 @@ import { useTheme } from '../theme/ThemeContext';
 import { ProfileMenu } from '../components/ProfileMenu';
 import { useBackgroundProtection } from '../hooks/useBackgroundProtection';
 import { triggerSOS } from '../services/api';
+import { useSettings } from '../hooks/useSettings';
+import { GuardianService } from '../../modules/guardian-service';
 import type { GeoLocation, TriggerType } from '@guardian/shared-schemas';
 
 interface HomeScreenProps {
@@ -33,6 +35,9 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const [isTriggered, setIsTriggered] = useState(false);
   const [sending, setSending] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
+  const [isBackgroundCountdown, setIsBackgroundCountdown] = useState(false);
+
+  const { countdownSeconds } = useSettings();
 
   const {
     isListening,
@@ -120,17 +125,23 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
     }
   }, [shakeDetected]);
 
-  // Handle background SOS trigger — navigate to StatusScreen
+  // Handle background SOS trigger — show in-app countdown and cancel native countdown
   useEffect(() => {
     if (backgroundSOSEventId) {
-      clearBackgroundSOS();
-      navigation.navigate('Status', { eventId: backgroundSOSEventId });
+      // Cancel native notification countdown since in-app overlay takes over
+      GuardianService.cancelCountdown().catch(() => {});
+      setIsBackgroundCountdown(true);
+      setShowCountdown(true);
     }
-  }, [backgroundSOSEventId, clearBackgroundSOS, navigation]);
+  }, [backgroundSOSEventId]);
 
   const handleCountdownConfirm = useCallback(() => {
     setShowCountdown(false);
-    if (shakeDetected) {
+    if (isBackgroundCountdown) {
+      setIsBackgroundCountdown(false);
+      clearBackgroundSOS();
+      void handleSOS('voice_background', 'Background voice SOS triggered');
+    } else if (shakeDetected) {
       clearShake();
       void handleSOS('shake', 'Shake detected');
     } else {
@@ -138,17 +149,20 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
       void handleSOS('voice', `Voice detected: "${transcript}"`);
       clearDetection();
     }
-  }, [detection, shakeDetected, handleSOS, clearDetection, clearShake]);
+  }, [detection, shakeDetected, isBackgroundCountdown, handleSOS, clearDetection, clearShake, clearBackgroundSOS]);
 
   const handleCountdownCancel = useCallback(() => {
     setShowCountdown(false);
-    if (shakeDetected) {
+    if (isBackgroundCountdown) {
+      setIsBackgroundCountdown(false);
+      clearBackgroundSOS();
+    } else if (shakeDetected) {
       clearShake();
     } else {
       clearDetection();
       void startListening();
     }
-  }, [shakeDetected, clearDetection, clearShake, startListening]);
+  }, [shakeDetected, isBackgroundCountdown, clearDetection, clearShake, clearBackgroundSOS, startListening]);
 
   // Auto-start voice and shake detection on mount
   useEffect(() => {
@@ -164,9 +178,10 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {showCountdown && (detection?.keyword || shakeDetected) && (
+      {showCountdown && (detection?.keyword || shakeDetected || isBackgroundCountdown) && (
         <CountdownOverlay
-          keyword={shakeDetected ? 'Shake Detected' : detection?.keyword ?? ''}
+          keyword={isBackgroundCountdown ? 'Background Voice Detected' : shakeDetected ? 'Shake Detected' : detection?.keyword ?? ''}
+          seconds={countdownSeconds}
           onConfirm={handleCountdownConfirm}
           onCancel={handleCountdownCancel}
         />
