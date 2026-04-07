@@ -7,6 +7,7 @@ interface UserRecord {
   email: string;
   displayName: string;
   phone: string;
+  disabled?: boolean;
   emergencyContacts: Array<{
     name: string;
     phone: string;
