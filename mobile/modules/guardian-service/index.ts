@@ -9,6 +9,9 @@ interface GuardianServiceModuleType extends NativeModule {
   isEnabled(): Promise<boolean>;
   setAuthCredentials(token: string, userId: string, apiUrl: string): Promise<void>;
   clearAuthCredentials(): Promise<void>;
+  setKeywords(keywordsJson: string): Promise<void>;
+  setCountdownDuration(seconds: number): Promise<void>;
+  cancelCountdown(): Promise<void>;
 }
 
 const GuardianServiceNative = requireNativeModule<GuardianServiceModuleType>('GuardianServiceModule');
@@ -24,6 +27,9 @@ export const GuardianService = {
   setAuthCredentials: (token: string, userId: string, apiUrl: string) =>
     GuardianServiceNative.setAuthCredentials(token, userId, apiUrl),
   clearAuthCredentials: () => GuardianServiceNative.clearAuthCredentials(),
+  setKeywords: (keywordsJson: string) => GuardianServiceNative.setKeywords(keywordsJson),
+  setCountdownDuration: (seconds: number) => GuardianServiceNative.setCountdownDuration(seconds),
+  cancelCountdown: () => GuardianServiceNative.cancelCountdown(),
 };
 
 export type BackgroundSOSEvent = {

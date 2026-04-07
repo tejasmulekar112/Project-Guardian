@@ -12,10 +12,11 @@ import { useTheme } from '../theme/ThemeContext';
 interface ProfileMenuProps {
   email: string;
   onContacts: () => void;
+  onSettings: () => void;
   onSignOut: () => void;
 }
 
-export function ProfileMenu({ email, onContacts, onSignOut }: ProfileMenuProps) {
+export function ProfileMenu({ email, onContacts, onSettings, onSignOut }: ProfileMenuProps) {
   const { colors, toggleTheme, isDark } = useTheme();
   const [visible, setVisible] = useState(false);
 
@@ -42,6 +43,14 @@ export function ProfileMenu({ email, onContacts, onSignOut }: ProfileMenuProps) 
       onPress: () => {
         setVisible(false);
         onContacts();
+      },
+    },
+    {
+      label: 'Settings',
+      icon: '\u2699',
+      onPress: () => {
+        setVisible(false);
+        onSettings();
       },
     },
     {

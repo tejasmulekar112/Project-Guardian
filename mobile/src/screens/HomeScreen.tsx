@@ -22,6 +22,7 @@ interface HomeScreenProps {
     Status: { eventId: string } | undefined;
     Contacts: undefined;
     Tracking: { initialLocation: GeoLocation; eventId: string };
+    Settings: undefined;
   }>;
 }
 
@@ -176,6 +177,7 @@ export const HomeScreen = ({ navigation }: HomeScreenProps) => {
         <ProfileMenu
           email={user?.email ?? ''}
           onContacts={() => navigation.navigate('Contacts')}
+          onSettings={() => navigation.navigate('Settings')}
           onSignOut={signOut}
         />
       </View>

@@ -97,5 +97,20 @@ class GuardianServiceModule : Module() {
             context.stopService(intent)
             promise.resolve(null)
         }
+
+        AsyncFunction("setKeywords") { keywordsJson: String, promise: Promise ->
+            prefs.edit().putString("distress_keywords", keywordsJson).apply()
+            promise.resolve(null)
+        }
+
+        AsyncFunction("setCountdownDuration") { seconds: Int, promise: Promise ->
+            prefs.edit().putInt("countdown_duration_seconds", seconds).apply()
+            promise.resolve(null)
+        }
+
+        AsyncFunction("cancelCountdown") { promise: Promise ->
+            GuardianForegroundService.cancelCountdown()
+            promise.resolve(null)
+        }
     }
 }

@@ -24,6 +24,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import org.json.JSONArray
 import org.vosk.Model
 import org.vosk.Recognizer
 import java.util.concurrent.Executors
@@ -37,11 +38,11 @@ class GuardianForegroundService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val COUNTDOWN_NOTIFICATION_ID = 1002
         private const val SOS_COOLDOWN_MS = 30_000L
-        private const val COUNTDOWN_DURATION_MS = 10_000L
+        private const val DEFAULT_COUNTDOWN_SECONDS = 10
         private const val COUNTDOWN_INTERVAL_MS = 1_000L
         private const val SAMPLE_RATE = 16000
 
-        private val DISTRESS_KEYWORDS = listOf(
+        private val DEFAULT_KEYWORDS = listOf(
             "help", "help me", "save me", "emergency",
             "bachao", "bacha", "madad", "sos"
         )
@@ -76,6 +77,21 @@ class GuardianForegroundService : Service() {
 
     private val prefs: SharedPreferences
         get() = getSharedPreferences("guardian_service", Context.MODE_PRIVATE)
+
+    private fun getDistressKeywords(): List<String> {
+        val json = prefs.getString("distress_keywords", null) ?: return DEFAULT_KEYWORDS
+        return try {
+            val arr = JSONArray(json)
+            (0 until arr.length()).map { arr.getString(it) }
+        } catch (e: Exception) {
+            DEFAULT_KEYWORDS
+        }
+    }
+
+    private fun getCountdownDurationMs(): Long {
+        val seconds = prefs.getInt("countdown_duration_seconds", DEFAULT_COUNTDOWN_SECONDS)
+        return seconds * 1000L
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -194,7 +210,7 @@ class GuardianForegroundService : Service() {
     private fun checkForDistressKeywords(jsonResult: String) {
         // Vosk returns JSON like {"text": "help me"} or {"partial": "help"}
         val lower = jsonResult.lowercase()
-        for (keyword in DISTRESS_KEYWORDS) {
+        for (keyword in getDistressKeywords()) {
             if (lower.contains("\"$keyword\"") || lower.contains(" $keyword ") || lower.contains(" $keyword\"")) {
                 Log.i(TAG, "Distress keyword detected: '$keyword' in: $jsonResult")
                 startSOSCountdown()
@@ -232,13 +248,14 @@ class GuardianForegroundService : Service() {
             return
         }
 
-        Log.i(TAG, "Starting SOS countdown (${COUNTDOWN_DURATION_MS / 1000}s)")
+        val countdownDurationMs = getCountdownDurationMs()
+        Log.i(TAG, "Starting SOS countdown (${countdownDurationMs / 1000}s)")
 
         // CountDownTimer must run on main thread
         mainHandler.post {
             startVibrationPattern()
 
-            countdownTimer = object : CountDownTimer(COUNTDOWN_DURATION_MS, COUNTDOWN_INTERVAL_MS) {
+            countdownTimer = object : CountDownTimer(countdownDurationMs, COUNTDOWN_INTERVAL_MS) {
                 override fun onTick(millisUntilFinished: Long) {
                     val secondsLeft = (millisUntilFinished / 1000).toInt() + 1
                     val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
