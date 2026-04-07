@@ -7,6 +7,7 @@ import { EventsTable } from '../components/EventsTable';
 import { EventsOverTimeChart } from '../components/EventsOverTimeChart';
 import { TriggerTypeChart } from '../components/TriggerTypeChart';
 import { NavLayout } from '../components/NavLayout';
+import { OverviewMap } from '../components/OverviewMap';
 
 export function DashboardPage() {
   const { events, loading: eventsLoading } = useEvents();
@@ -32,6 +33,7 @@ export function DashboardPage() {
           eventsToday={stats.eventsToday}
           totalUsers={stats.totalUsers}
         />
+        <OverviewMap events={events} userEmails={userEmails} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EventsOverTimeChart events={events} />
           <TriggerTypeChart events={events} />
