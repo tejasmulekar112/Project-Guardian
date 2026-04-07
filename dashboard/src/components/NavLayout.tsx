@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard' },
+  { path: '/analytics', label: 'Analytics' },
   { path: '/users', label: 'Users' },
 ];
 

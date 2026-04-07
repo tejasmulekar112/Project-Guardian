@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { UsersPage } from './pages/UsersPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -31,6 +32,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AnalyticsPage />
             </ProtectedRoute>
           }
         />
