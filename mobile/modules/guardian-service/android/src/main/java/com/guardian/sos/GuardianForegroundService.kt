@@ -12,7 +12,13 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Build
+import android.os.CountDownTimer
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -27,8 +33,12 @@ class GuardianForegroundService : Service() {
     companion object {
         private const val TAG = "GuardianFgService"
         private const val CHANNEL_ID = "guardian_protection"
+        private const val SOS_ALERT_CHANNEL_ID = "guardian_sos_alert"
         private const val NOTIFICATION_ID = 1001
+        private const val COUNTDOWN_NOTIFICATION_ID = 1002
         private const val SOS_COOLDOWN_MS = 30_000L
+        private const val COUNTDOWN_DURATION_MS = 10_000L
+        private const val COUNTDOWN_INTERVAL_MS = 1_000L
         private const val SAMPLE_RATE = 16000
 
         private val DISTRESS_KEYWORDS = listOf(
@@ -39,6 +49,18 @@ class GuardianForegroundService : Service() {
         @Volatile
         var isRunning = false
             private set
+
+        @Volatile
+        private var countdownTimer: CountDownTimer? = null
+
+        @Volatile
+        private var serviceInstance: GuardianForegroundService? = null
+
+        fun cancelCountdown() {
+            countdownTimer?.cancel()
+            countdownTimer = null
+            serviceInstance?.onCountdownCancelled()
+        }
     }
 
     private var recognizer: Recognizer? = null
@@ -49,6 +71,7 @@ class GuardianForegroundService : Service() {
     private lateinit var sosTriggerHandler: SOSTriggerHandler
     private lateinit var audioRecorder: AudioEvidenceRecorder
     private val executor = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var lastTriggerTime = 0L
 
     private val prefs: SharedPreferences
@@ -59,11 +82,13 @@ class GuardianForegroundService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         sosTriggerHandler = SOSTriggerHandler(this)
         audioRecorder = AudioEvidenceRecorder(this)
+        serviceInstance = this
         Log.i(TAG, "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createNotificationChannel()
+        createSOSAlertChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         isRunning = true
 
@@ -81,6 +106,9 @@ class GuardianForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         isRunning = false
+        countdownTimer?.cancel()
+        countdownTimer = null
+        serviceInstance = null
         stopVosk()
         audioRecorder.stopRecording()
         executor.shutdown()
@@ -169,7 +197,7 @@ class GuardianForegroundService : Service() {
         for (keyword in DISTRESS_KEYWORDS) {
             if (lower.contains("\"$keyword\"") || lower.contains(" $keyword ") || lower.contains(" $keyword\"")) {
                 Log.i(TAG, "Distress keyword detected: '$keyword' in: $jsonResult")
-                onWakeWordDetected()
+                startSOSCountdown()
                 return
             }
         }
@@ -191,13 +219,83 @@ class GuardianForegroundService : Service() {
         }
     }
 
-    private fun onWakeWordDetected() {
+    private fun startSOSCountdown() {
+        // Don't start another countdown if one is already running
+        if (countdownTimer != null) {
+            Log.i(TAG, "Countdown already running, ignoring duplicate detection")
+            return
+        }
+
         val now = System.currentTimeMillis()
         if (now - lastTriggerTime < SOS_COOLDOWN_MS) {
             Log.i(TAG, "SOS cooldown active, ignoring trigger")
             return
         }
-        lastTriggerTime = now
+
+        Log.i(TAG, "Starting SOS countdown (${COUNTDOWN_DURATION_MS / 1000}s)")
+
+        // CountDownTimer must run on main thread
+        mainHandler.post {
+            startVibrationPattern()
+
+            countdownTimer = object : CountDownTimer(COUNTDOWN_DURATION_MS, COUNTDOWN_INTERVAL_MS) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = (millisUntilFinished / 1000).toInt() + 1
+                    val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    manager.notify(COUNTDOWN_NOTIFICATION_ID, buildCountdownNotification(secondsLeft))
+                }
+
+                override fun onFinish() {
+                    countdownTimer = null
+                    stopVibration()
+                    val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    manager.cancel(COUNTDOWN_NOTIFICATION_ID)
+                    Log.i(TAG, "Countdown finished — triggering SOS")
+                    onWakeWordDetected()
+                }
+            }.start()
+        }
+    }
+
+    private fun onCountdownCancelled() {
+        stopVibration()
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(COUNTDOWN_NOTIFICATION_ID)
+        Log.i(TAG, "SOS countdown cancelled by user — resuming listening")
+    }
+
+    private fun startVibrationPattern() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+
+        // Repeating pattern: vibrate 500ms, pause 500ms
+        val pattern = longArrayOf(0, 500, 500)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(pattern, 0)
+        }
+    }
+
+    private fun stopVibration() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+        vibrator.cancel()
+    }
+
+    private fun onWakeWordDetected() {
+        lastTriggerTime = System.currentTimeMillis()
 
         executor.execute {
             val location = getLastKnownLocation()
@@ -308,6 +406,61 @@ class GuardianForegroundService : Service() {
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build()
+        }
+    }
+
+    private fun buildCountdownNotification(secondsLeft: Int): Notification {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val launchPendingIntent = PendingIntent.getActivity(
+            this, 0, launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val cancelIntent = Intent(SOSCancelReceiver.ACTION_CANCEL_SOS).apply {
+            setPackage(packageName)
+        }
+        val cancelPendingIntent = PendingIntent.getBroadcast(
+            this, 0, cancelIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, SOS_ALERT_CHANNEL_ID)
+                .setContentTitle("SOS Detected — Triggering in ${secondsLeft}s")
+                .setContentText("Tap Cancel to stop")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(launchPendingIntent)
+                .setOngoing(true)
+                .addAction(
+                    Notification.Action.Builder(null, "Cancel", cancelPendingIntent).build()
+                )
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this)
+                .setContentTitle("SOS Detected — Triggering in ${secondsLeft}s")
+                .setContentText("Tap Cancel to stop")
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentIntent(launchPendingIntent)
+                .setOngoing(true)
+                .addAction(0, "Cancel", cancelPendingIntent)
+                .build()
+        }
+    }
+
+    private fun createSOSAlertChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                SOS_ALERT_CHANNEL_ID,
+                "SOS Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "High-priority alerts when distress is detected"
+                enableVibration(false) // We handle vibration ourselves
+                setShowBadge(true)
+            }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
         }
     }
 }

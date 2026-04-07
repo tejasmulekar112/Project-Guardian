@@ -19,6 +19,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name="com.guardian.sos.SOSCancelReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.guardian.sos.CANCEL_SOS_COUNTDOWN" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
