@@ -61,7 +61,7 @@ export function OverviewMap({ events, userEmails }: OverviewMapProps) {
 
   // Center on the most recent active event, or first event
   const activeEvents = eventsWithLocation.filter((e) => isActive(e.status));
-  const centerEvent = activeEvents[0] ?? eventsWithLocation[0];
+  const centerEvent = activeEvents[0] ?? eventsWithLocation[0]!;
 
   return (
     <div className="bg-gray-800 rounded-lg p-6">

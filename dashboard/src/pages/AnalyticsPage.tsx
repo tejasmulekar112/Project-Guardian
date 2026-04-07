@@ -83,7 +83,8 @@ export function AnalyticsPage() {
     }));
     for (const event of events) {
       const h = new Date(event.createdAt).getHours();
-      hours[h].count++;
+      const entry = hours[h];
+      if (entry) entry.count++;
     }
     return hours;
   }, [events]);
@@ -93,7 +94,8 @@ export function AnalyticsPage() {
     const counts = days.map((day) => ({ day, count: 0 }));
     for (const event of events) {
       const d = new Date(event.createdAt).getDay();
-      counts[d].count++;
+      const entry = counts[d];
+      if (entry) entry.count++;
     }
     return counts;
   }, [events]);
