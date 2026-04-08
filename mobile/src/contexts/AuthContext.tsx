@@ -29,22 +29,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
 
+      // Clear any existing token refresh interval
+      if (tokenRefreshInterval) {
+        clearInterval(tokenRefreshInterval);
+        tokenRefreshInterval = null;
+      }
+
       // Share auth credentials with native background service (Android only)
       if (Platform.OS === 'android') {
         if (firebaseUser) {
+          const syncToken = async () => {
+            try {
+              const token = await firebaseUser.getIdToken(true);
+              const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+              await GuardianService.setAuthCredentials(token, firebaseUser.uid, apiUrl);
+            } catch (e) {
+              console.warn('Failed to refresh auth token for background service:', e);
+            }
+          };
+
           try {
-            const token = await firebaseUser.getIdToken();
-            const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
-            await GuardianService.setAuthCredentials(token, firebaseUser.uid, apiUrl);
+            await syncToken();
             // Auto-start service if enabled
             const enabled = await GuardianService.isEnabled();
             if (enabled) {
               await GuardianService.startService();
             }
+            // Refresh token every 45 minutes (tokens expire after 1 hour)
+            tokenRefreshInterval = setInterval(syncToken, 45 * 60 * 1000);
           } catch (e) {
             console.warn('Failed to set auth credentials for background service:', e);
           }
@@ -57,7 +75,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
     });
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      if (tokenRefreshInterval) {
+        clearInterval(tokenRefreshInterval);
+      }
+    };
   }, []);
 
   const { expoPushToken } = usePushNotifications();

@@ -1,22 +1,18 @@
-import { NativeModule, requireNativeModule } from 'expo-modules-core';
+import { requireNativeModule } from 'expo-modules-core';
 import { EventEmitter } from 'expo-modules-core';
 
-interface GuardianServiceModuleType extends NativeModule {
-  startService(): Promise<void>;
-  stopService(): Promise<void>;
-  isRunning(): Promise<boolean>;
-  setEnabled(enabled: boolean): Promise<void>;
-  isEnabled(): Promise<boolean>;
-  setAuthCredentials(token: string, userId: string, apiUrl: string): Promise<void>;
-  clearAuthCredentials(): Promise<void>;
-  setKeywords(keywordsJson: string): Promise<void>;
-  setCountdownDuration(seconds: number): Promise<void>;
-  cancelCountdown(): Promise<void>;
-}
+type GuardianServiceEvents = {
+  onBackgroundSOSTriggered: (event: BackgroundSOSEvent) => void;
+};
 
-const GuardianServiceNative = requireNativeModule<GuardianServiceModuleType>('GuardianServiceModule');
+const GuardianServiceNative = requireNativeModule('GuardianServiceModule');
 
-export const guardianServiceEmitter = new EventEmitter(GuardianServiceNative);
+export const guardianServiceEmitter = new EventEmitter(GuardianServiceNative as unknown as typeof EventEmitter.prototype) as unknown as {
+  addListener<K extends keyof GuardianServiceEvents>(
+    eventName: K,
+    listener: GuardianServiceEvents[K],
+  ): { remove: () => void };
+};
 
 export const GuardianService = {
   startService: () => GuardianServiceNative.startService(),

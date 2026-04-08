@@ -10,23 +10,16 @@ interface UseBackgroundProtectionReturn {
   clearBackgroundSOS: () => void;
 }
 
+const isAndroid = Platform.OS === 'android';
+
 export function useBackgroundProtection(): UseBackgroundProtectionReturn {
   const [isRunning, setIsRunning] = useState(false);
   const [isEnabled, setIsEnabled] = useState(true);
   const [backgroundSOSEventId, setBackgroundSOSEventId] = useState<string | null>(null);
 
-  // Not supported on iOS
-  if (Platform.OS !== 'android') {
-    return {
-      isRunning: false,
-      isEnabled: false,
-      toggle: async () => {},
-      backgroundSOSEventId: null,
-      clearBackgroundSOS: () => {},
-    };
-  }
-
   useEffect(() => {
+    if (!isAndroid) return;
+
     // Check initial state
     GuardianService.isRunning().then(setIsRunning).catch(() => setIsRunning(false));
     GuardianService.isEnabled().then(setIsEnabled).catch(() => setIsEnabled(true));
@@ -51,6 +44,7 @@ export function useBackgroundProtection(): UseBackgroundProtectionReturn {
   }, []);
 
   const toggle = useCallback(async () => {
+    if (!isAndroid) return;
     const newEnabled = !isEnabled;
     await GuardianService.setEnabled(newEnabled);
     setIsEnabled(newEnabled);
@@ -66,10 +60,10 @@ export function useBackgroundProtection(): UseBackgroundProtectionReturn {
   }, []);
 
   return {
-    isRunning,
-    isEnabled,
+    isRunning: isAndroid ? isRunning : false,
+    isEnabled: isAndroid ? isEnabled : false,
     toggle,
-    backgroundSOSEventId,
+    backgroundSOSEventId: isAndroid ? backgroundSOSEventId : null,
     clearBackgroundSOS,
   };
 }
