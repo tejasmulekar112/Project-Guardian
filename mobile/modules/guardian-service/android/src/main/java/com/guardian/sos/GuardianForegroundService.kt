@@ -25,6 +25,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import org.json.JSONArray
+import com.guardian.sos.service.R
 import org.vosk.Model
 import org.vosk.Recognizer
 import java.util.concurrent.Executors

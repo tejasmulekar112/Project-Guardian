@@ -1,16 +1,10 @@
 const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
 
-const projectRoot = path.resolve(__dirname);
-const monorepoRoot = path.resolve(__dirname, '..');
+// Prevent Expo from using the monorepo root as Metro's server root.
+// Without this, the workspace root becomes the server root and Gradle's
+// --entry-file index.js (relative to mobile/) fails to resolve.
+process.env.EXPO_NO_METRO_WORKSPACE_ROOT = '1';
 
 const config = getDefaultConfig(__dirname);
-
-// projectRoot = mobile/ for module resolution (finds App.tsx, src/*, etc.)
-config.projectRoot = projectRoot;
-
-// serverRoot = monorepo root, because Expo Go requests /mobile/App.tsx.bundle
-// (it prepends the app's subdirectory relative to the workspace root)
-config.server.unstable_serverRoot = monorepoRoot;
 
 module.exports = config;

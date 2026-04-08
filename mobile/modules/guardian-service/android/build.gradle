@@ -1,10 +1,13 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-group = 'com.guardian.sos'
+group = 'com.guardian.sos.service'
 
 android {
-    namespace "com.guardian.sos"
+    namespace "com.guardian.sos.service"
+    buildFeatures {
+        buildConfig false
+    }
     compileSdk 35
 
     defaultConfig {
