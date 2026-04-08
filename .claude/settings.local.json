@@ -9,7 +9,13 @@
       "Bash(npx expo:*)",
       "Bash(poetry install:*)",
       "Bash(where poetry:*)",
-      "Bash(pip --version)"
+      "Bash(pip --version)",
+      "Bash(ls -la /d/Projects/SOS_app/mobile/jest.config.*)",
+      "Bash(npx jest:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npm test:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(git stash:*2)"
     ]
   }
 }
