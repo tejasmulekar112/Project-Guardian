@@ -1,0 +1,21 @@
+# Dependencies (EAS installs fresh)
+node_modules/
+
+# Expo cache
+.expo/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large files not needed for build
+*.zip
+
+# Storybook
+.storybook/
