@@ -32,9 +32,9 @@ firebase-service-account.json
 .firebase/
 serviceAccountKey.json
 
-# Expo
-mobile/android/
-mobile/ios/
+# Expo (generated, but needed for EAS dev-client builds)
+# mobile/android/
+# mobile/ios/
 
 # Python
 *.egg
