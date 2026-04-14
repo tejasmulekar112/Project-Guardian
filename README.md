@@ -162,6 +162,12 @@ cd dashboard && npx vite build && firebase deploy --only hosting
 
 See [docs/Project_Guardian_Documentation.md](docs/Project_Guardian_Documentation.md) for the complete project documentation (1800+ lines) covering all phases, architecture, implementation details, and screenshots.
 
+## Author
+
+**Tejas Mulekar**
+- [Google Developer Profile](https://developers.google.com/profile/u/105097848655408514164)
+- [GitHub](https://github.com/tejasmulekar112)
+
 ## License
 
 This project is developed as part of an academic initiative.
