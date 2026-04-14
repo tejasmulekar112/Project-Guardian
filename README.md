@@ -20,8 +20,9 @@
 - **Auto Evidence Recording** — 30s audio + 15s video captured automatically on trigger
 - **SMS & Push Alerts** — Emergency contacts notified instantly via Twilio SMS and FCM
 - **Live Location Tracking** — Real-time GPS tracking on interactive map
+- **Gemini AI Analysis** — Google Gemini classifies emergency severity, type, and recommended actions
 - **Offline-First** — Evidence stored locally and uploaded when connected
-- **Admin Dashboard** — Real-time monitoring, analytics, event management, CSV export
+- **Admin Dashboard** — Real-time monitoring, analytics, event management, CSV/PDF export
 - **Dark/Light Mode** — Full theme support across the mobile app
 
 ## Screenshots
@@ -66,10 +67,11 @@
 
 | Layer | Technologies |
 |-------|-------------|
-| **Mobile** | React Native, Expo SDK 53, TypeScript, expo-sensors, expo-speech-recognition |
-| **Backend** | Python, FastAPI, Poetry, Firebase Admin SDK, Twilio |
-| **Dashboard** | React, Vite, TailwindCSS v4, Leaflet, Recharts |
-| **Cloud** | Firebase (Auth, Firestore, Storage, FCM, Hosting), Render |
+| **Mobile** | React Native 0.81, Expo SDK 54, TypeScript 5.9, expo-sensors, expo-speech-recognition |
+| **Backend** | Python 3.12, FastAPI, Poetry, Firebase Admin SDK, Twilio, Google Gemini AI |
+| **Dashboard** | React 19, Vite 6, TailwindCSS v4, Leaflet, Recharts |
+| **Cloud** | Firebase (Auth, Firestore, Storage, FCM, Hosting), Google Maps, Render |
+| **AI** | Google Gemini 2.0 Flash (emergency analysis), OpenAI Whisper (voice transcription) |
 | **Build** | EAS Build (Android APK/AAB), Firebase Hosting |
 
 ## Architecture
@@ -80,11 +82,12 @@ Mobile App ──POST /sos/trigger──> FastAPI Backend (Render)
                                        |---> Firestore (event record)
                                        |---> Twilio (SMS to contacts)
                                        |---> FCM (push notifications)
+                                       |---> Google Gemini AI (threat analysis)
 
 Mobile App ──direct──> Firebase Storage (evidence upload)
 Mobile App ──direct──> Google Maps API (live tracking)
 
-Dashboard  ──direct──> Firestore (real-time monitoring)
+Dashboard  ──direct──> Firestore (real-time monitoring + AI analysis)
 ```
 
 ## Project Structure

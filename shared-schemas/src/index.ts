@@ -5,6 +5,7 @@ export type {
   SOSTriggerRequest,
   SOSTriggerResponse,
   SOSEvent,
+  SOSEventEvidence,
 } from './sos-event';
 
 export type {

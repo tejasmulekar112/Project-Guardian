@@ -20,7 +20,7 @@ export function ProfileMenu({ email, onContacts, onSettings, onSignOut }: Profil
   const { colors, toggleTheme, isDark } = useTheme();
   const [visible, setVisible] = useState(false);
 
-  const initial = (email.charAt(0) ?? '?').toUpperCase();
+  const initial = (email.charAt(0) || '?').toUpperCase();
 
   const menuItems = [
     {

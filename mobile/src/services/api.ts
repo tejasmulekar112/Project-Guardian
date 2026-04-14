@@ -2,7 +2,6 @@ import type { SOSTriggerRequest, SOSTriggerResponse, VoiceDetectionResult } from
 import { auth } from './firebase';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
-console.log('API_URL configured as:', API_URL);
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const user = auth.currentUser;
@@ -21,9 +20,6 @@ export async function triggerSOS(payload: SOSTriggerRequest): Promise<SOSTrigger
   const headers = await getAuthHeaders();
   const url = `${API_URL}/sos/trigger`;
   const body = JSON.stringify(payload);
-  console.log('SOS REQUEST URL:', url);
-  console.log('SOS REQUEST BODY:', body);
-  console.log('SOS REQUEST HEADERS:', JSON.stringify(headers));
 
   const response = await fetch(url, {
     method: 'POST',
@@ -33,7 +29,7 @@ export async function triggerSOS(payload: SOSTriggerRequest): Promise<SOSTrigger
 
   if (!response.ok) {
     const errorBody = await response.text();
-    console.log('SOS ERROR RESPONSE:', response.status, errorBody);
+    if (__DEV__) console.warn('SOS ERROR:', response.status, errorBody);
     throw new Error(`SOS trigger failed: ${response.status} - ${errorBody}`);
   }
 
@@ -76,10 +72,13 @@ export async function detectVoice(audioUri: string): Promise<VoiceDetectionResul
 
 export async function registerFcmToken(token: string): Promise<void> {
   const headers = await getAuthHeaders();
-  await fetch(`${API_URL}/users/me/fcm-token`, {
+  const response = await fetch(`${API_URL}/users/me/fcm-token`, {
     method: 'PUT',
     headers,
     body: JSON.stringify({ token }),
   });
+  if (!response.ok) {
+    if (__DEV__) console.warn('FCM token registration failed:', response.status);
+  }
 }
 

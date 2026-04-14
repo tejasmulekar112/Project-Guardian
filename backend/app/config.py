@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     # Server
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
-    cors_origins: str = "http://localhost:19006"
+    cors_origins: str = "*"
+
+    # Gemini
+    gemini_api_key: str = ""
 
     model_config = {"env_file": ".env"}
 

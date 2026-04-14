@@ -4,11 +4,17 @@ import { db } from '../config/firebase';
 
 interface UserRecord {
   uid: string;
-  email: string;
-  displayName: string;
-  phone: string;
+  email?: string;
+  displayName?: string;
+  display_name?: string;
+  phone?: string;
   disabled?: boolean;
-  emergencyContacts: Array<{
+  emergencyContacts?: Array<{
+    name: string;
+    phone: string;
+    relationship: string;
+  }>;
+  emergency_contacts?: Array<{
     name: string;
     phone: string;
     relationship: string;
@@ -20,14 +26,21 @@ export function useUsers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        uid: doc.id,
-        ...doc.data(),
-      })) as UserRecord[];
-      setUsers(data);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, 'users'),
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          uid: doc.id,
+          ...doc.data(),
+        })) as UserRecord[];
+        setUsers(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Users subscription error:', error);
+        setLoading(false);
+      },
+    );
     return unsubscribe;
   }, []);
 

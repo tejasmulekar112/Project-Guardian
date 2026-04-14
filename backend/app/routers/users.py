@@ -75,9 +75,5 @@ async def register_fcm_token(
     user: dict = Depends(verify_firebase_token),
 ) -> dict[str, str]:
     """Register or update FCM push token for the current user."""
-    db = FirebaseService._db()
-    db.collection("users").document(user["uid"]).set(
-        {"fcm_token": body.token},
-        merge=True,
-    )
+    await FirebaseService.update_fcm_token(user["uid"], body.token)
     return {"status": "registered"}

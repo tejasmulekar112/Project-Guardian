@@ -9,7 +9,7 @@ from app.models.sos_event import GeoLocation, SOSTriggerRequest
 @pytest.fixture
 def sos_payload() -> SOSTriggerRequest:
     return SOSTriggerRequest(
-        user_id="test-user",
+        userId="test-user",
         location=GeoLocation(latitude=28.6139, longitude=77.2090),
         message="Help!",
     )

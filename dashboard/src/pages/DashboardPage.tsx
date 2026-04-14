@@ -14,7 +14,7 @@ export function DashboardPage() {
   const { users, loading: usersLoading } = useUsers();
   const stats = useStats(events, users.length);
 
-  const userEmails = new Map(users.map((u) => [u.uid, u.email ?? u.displayName]));
+  const userEmails = new Map(users.map((u) => [u.uid, u.email ?? u.displayName ?? u.display_name ?? u.uid]));
 
   if (eventsLoading || usersLoading) {
     return (

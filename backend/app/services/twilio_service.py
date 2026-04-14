@@ -1,8 +1,13 @@
+import asyncio
+import logging
+
 from twilio.rest import Client
 
 from app.config import settings
 from app.models.sos_event import SOSTriggerRequest
 from app.services.location_service import LocationService
+
+logger = logging.getLogger(__name__)
 
 
 class TwilioService:
@@ -35,12 +40,13 @@ class TwilioService:
             if not phone:
                 continue
             try:
-                client.messages.create(
+                await asyncio.to_thread(
+                    client.messages.create,
                     body=body,
                     from_=settings.twilio_from_phone,
                     to=phone,
                 )
                 sent += 1
-            except Exception:
-                pass  # Log and continue — don't fail the SOS
+            except Exception as e:
+                logger.warning("SMS send failed for %s: %s", phone, e)
         return sent

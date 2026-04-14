@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from app.middleware.auth import verify_firebase_token
 from app.models.sos_event import SOSStatus, SOSTriggerRequest, SOSTriggerResponse
 from app.services.firebase_service import FirebaseService
+from app.services.gemini_service import GeminiService
 from app.services.location_service import LocationService
 from app.services.twilio_service import TwilioService
 from app.services.whisper_service import WhisperService
@@ -40,6 +41,16 @@ async def trigger_sos(
 
     # 5. Send FCM push to contacts with app installed
     await FirebaseService.notify_contacts(user_id, event_id, maps_url)
+
+    # 6. Gemini AI analysis (non-blocking, best-effort)
+    analysis = await GeminiService.analyze_emergency(
+        trigger_type=payload.triggerType.value,
+        message=payload.message,
+        latitude=payload.location.latitude,
+        longitude=payload.location.longitude,
+    )
+    if analysis:
+        await FirebaseService.update_event_analysis(event_id, analysis)
 
     return SOSTriggerResponse(eventId=event_id, status=SOSStatus.DISPATCHED)
 

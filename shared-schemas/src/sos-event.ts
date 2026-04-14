@@ -19,6 +19,13 @@ export interface SOSTriggerResponse {
   status: SOSStatus;
 }
 
+export interface SOSEventEvidence {
+  type: 'audio' | 'video' | 'photo';
+  url: string;
+  filename: string;
+  createdAt: number;
+}
+
 export interface SOSEvent {
   id: string;
   userId: string;
@@ -28,4 +35,5 @@ export interface SOSEvent {
   message?: string;
   createdAt: number;
   updatedAt: number;
+  evidence?: SOSEventEvidence[];
 }

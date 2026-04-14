@@ -40,3 +40,12 @@ serviceAccountKey.json
 *.egg
 .eggs/
 *.whl
+
+# Large binaries
+*.zip
+
+# Workspace files (may contain private paths)
+*.code-workspace
+
+# PPT generation scripts
+docs/create_pptx*.py

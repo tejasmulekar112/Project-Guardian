@@ -79,7 +79,7 @@ export const ContactsScreen = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={contacts}
-        keyExtractor={(_, i) => i.toString()}
+        keyExtractor={(item, i) => `${item.phone}-${i}`}
         ListEmptyComponent={<Text style={[styles.empty, { color: colors.textSecondary }]}>No emergency contacts yet</Text>}
         renderItem={({ item, index }) => (
           <View style={[styles.contactRow, { backgroundColor: colors.surface }]}>

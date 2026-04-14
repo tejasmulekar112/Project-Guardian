@@ -34,7 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleTheme = useCallback(() => {
     setMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
-      AsyncStorage.setItem(THEME_KEY, next);
+      AsyncStorage.setItem(THEME_KEY, next).catch(() => {});
       return next;
     });
   }, []);

@@ -26,17 +26,22 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-        if (adminDoc.exists()) {
-          setState({ user, isAdmin: true, loading: false, error: null });
-        } else {
-          await firebaseSignOut(auth);
-          setState({
-            user: null,
-            isAdmin: false,
-            loading: false,
-            error: 'Access denied. You are not an admin.',
-          });
+        try {
+          const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+          if (adminDoc.exists()) {
+            setState({ user, isAdmin: true, loading: false, error: null });
+          } else {
+            await firebaseSignOut(auth);
+            setState({
+              user: null,
+              isAdmin: false,
+              loading: false,
+              error: 'Access denied. You are not an admin.',
+            });
+          }
+        } catch (e) {
+          console.error('Auth state check failed:', e);
+          setState({ user: null, isAdmin: false, loading: false, error: 'Authentication error.' });
         }
       } else {
         setState({ user: null, isAdmin: false, loading: false, error: null });
@@ -59,7 +64,11 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
-    await firebaseSignOut(auth);
+    try {
+      await firebaseSignOut(auth);
+    } catch (e) {
+      console.error('Sign out failed:', e);
+    }
   }, []);
 
   return { ...state, signIn, signOut };
